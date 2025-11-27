@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { ChevronDown, ChevronRight, Trash2, Plus } from 'lucide-react';
-import type { Segment, Stripe } from '../types';
+import type { Segment, Stripe } from '../types'; // Ensure 'type' is here too for best practice
 import { useFabricStore } from '../store/fabricStore';
-import clsx from 'clsx';
 
 interface Props {
   segment: Segment;
@@ -44,7 +43,7 @@ export const SegmentCard = ({ segment, index }: Props) => {
         </div>
 
         <div className="flex items-center gap-3">
-            {/* Repeat Logic [FN-08] */}
+            {/* Repeat Logic */}
           <div className="flex items-center bg-white border rounded px-2 py-1">
             <span className="text-xs text-gray-500 mr-2">x</span>
             <input
@@ -103,7 +102,7 @@ const StripeRow = ({ stripe, onChange, onDelete }: {
 }) => {
     return (
         <div className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded group">
-            {/* Color Picker [FN-07] */}
+            {/* Color Picker */}
             <div className="relative overflow-hidden w-8 h-8 rounded-full shadow-sm border border-gray-200">
                 <input
                     type="color"
@@ -113,7 +112,7 @@ const StripeRow = ({ stripe, onChange, onDelete }: {
                 />
             </div>
 
-            {/* Width Selector [FN-07] */}
+            {/* Width Selector */}
             <select
                 value={stripe.widthUnit}
                 onChange={(e) => onChange({ widthUnit: parseInt(e.target.value) })}

@@ -1,5 +1,3 @@
-import { AlertTriangle } from 'lucide-react';
-
 interface Props {
   isOpen: boolean;
   onConfirm: () => void;

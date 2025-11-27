@@ -54,11 +54,11 @@ export const FabricCanvas = () => {
 
     tCtx.drawImage(sourceCanvas, 0, 0);
 
-    // FIXED: Dynamic Watermark Sizing
+    // Watermark
     tCtx.save();
     tCtx.translate(tempCanvas.width / 2, tempCanvas.height / 2);
 
-    // Calculate font size proportional to width (10% of width)
+    // Dynamic Font Sizing
     const fontSize = Math.max(20, Math.floor(tempCanvas.width / 10));
     tCtx.font = `bold ${fontSize}px sans-serif`;
 
@@ -69,15 +69,19 @@ export const FabricCanvas = () => {
     tCtx.fillStyle = 'rgba(0, 0, 0, 0.1)';
     tCtx.fillText('TCG Fashions', 0, 0);
 
-    // Subtle stroke
     tCtx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-    tCtx.lineWidth = Math.max(1, fontSize / 40); // Scale stroke with font
+    tCtx.lineWidth = Math.max(1, fontSize / 40);
     tCtx.strokeText('TCG Fashions', 0, 0);
 
     tCtx.restore();
 
+    // FIXED: Generate Unique Filename with Timestamp
+    const now = new Date();
+    const dateStr = now.toISOString().slice(0,10); // YYYY-MM-DD
+    const timeStr = now.toTimeString().slice(0,8).replace(/:/g, ''); // HHMMSS
+
     const link = document.createElement('a');
-    link.download = `TCG-AsoOke-${new Date().toISOString().slice(0,10)}.png`;
+    link.download = `TCG-AsoOke-${dateStr}-${timeStr}.png`;
     link.href = tempCanvas.toDataURL('image/png');
     link.click();
   };
