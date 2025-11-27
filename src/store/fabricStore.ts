@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
-import type { FabricState, Segment, Stripe } from '../types';
+import type { FabricState, Segment, Stripe } from '../types'; // FIXED: Added 'type'
 
 const getRandomColor = () => {
   const letters = '0123456789ABCDEF';
@@ -12,16 +12,27 @@ const getRandomColor = () => {
   return color;
 };
 
+// Helper: Calculate total used width in units
+const calculateTotalUnits = (timeline: Segment[]) => {
+  return timeline.reduce((acc, seg) => {
+    const segWidth = seg.items.reduce((sAcc, item) => sAcc + item.widthUnit, 0);
+    return acc + (segWidth * seg.repeatCount);
+  }, 0);
+};
+
 export const useFabricStore = create<FabricState>()(
   persist(
     (set, get) => ({
       timeline: [],
       textureOpacity: 0.3,
-      loomWidth: 6.5, // Default to Awẹ́
+      loomWidth: 6.5,
+      activeAlert: null, // NEW: Store alert message here
 
       setLoomWidth: (width) => set({ loomWidth: width }),
 
       resetPattern: () => set({ timeline: [] }),
+
+      clearAlert: () => set({ activeAlert: null }), // NEW: Action to dismiss alert
 
       addSegment: () =>
         set((state) => ({
@@ -31,28 +42,79 @@ export const useFabricStore = create<FabricState>()(
           ]
         })),
 
-      addStripeToSegment: (segmentId, stripeData) =>
+      addStripeToSegment: (segmentId, stripeData) => {
+        const state = get();
+        const maxUnits = state.loomWidth * 2;
+        const currentUnits = calculateTotalUnits(state.timeline);
+
+        const segment = state.timeline.find(s => s.id === segmentId);
+        if (!segment) return;
+
+        const addedUnits = stripeData.widthUnit * segment.repeatCount;
+
+        if (currentUnits + addedUnits > maxUnits) {
+          // FIXED: Use state instead of browser alert
+          set({ activeAlert: `Loom Full! Max Width: ${state.loomWidth}"` });
+          return;
+        }
+
         set((state) => ({
           timeline: state.timeline.map((seg) =>
             seg.id === segmentId
               ? { ...seg, items: [...seg.items, { ...stripeData, id: uuidv4() }] }
               : seg
           ),
-        })),
+        }));
+      },
 
-      updateSegmentRepeat: (segmentId, count) =>
+      updateSegmentRepeat: (segmentId, count) => {
+        const state = get();
+        const maxUnits = state.loomWidth * 2;
+
+        const segment = state.timeline.find(s => s.id === segmentId);
+        if (!segment) return;
+
+        const otherSegmentsWidth = calculateTotalUnits(state.timeline.filter(s => s.id !== segmentId));
+        const segmentBaseWidth = segment.items.reduce((acc, item) => acc + item.widthUnit, 0);
+
+        const newTotal = otherSegmentsWidth + (segmentBaseWidth * count);
+
+        if (newTotal > maxUnits) {
+           set({ activeAlert: `Cannot repeat ${count} times.\nLimit is ${state.loomWidth}"` });
+           return;
+        }
+
         set((state) => ({
           timeline: state.timeline.map((seg) =>
             seg.id === segmentId ? { ...seg, repeatCount: Math.max(1, count) } : seg
           ),
-        })),
+        }));
+      },
 
       deleteSegment: (segmentId) =>
         set((state) => ({
           timeline: state.timeline.filter((seg) => seg.id !== segmentId),
         })),
 
-      updateStripe: (segmentId, stripeId, updates) =>
+      updateStripe: (segmentId, stripeId, updates) => {
+         const state = get();
+
+         if (updates.widthUnit) {
+            const maxUnits = state.loomWidth * 2;
+            const hypotheticalTimeline = state.timeline.map(seg => {
+                if (seg.id !== segmentId) return seg;
+                return {
+                    ...seg,
+                    items: seg.items.map(item => item.id === stripeId ? { ...item, ...updates } : item)
+                };
+            });
+
+            if (calculateTotalUnits(hypotheticalTimeline) > maxUnits) {
+                set({ activeAlert: `Too wide! Limit is ${state.loomWidth}"` });
+                return;
+            }
+         }
+
         set((state) => ({
           timeline: state.timeline.map((seg) =>
             seg.id === segmentId
@@ -64,7 +126,8 @@ export const useFabricStore = create<FabricState>()(
                 }
               : seg
           ),
-        })),
+        }));
+      },
 
       deleteStripeFromSegment: (segmentId, stripeId) =>
         set((state) => ({
@@ -75,18 +138,14 @@ export const useFabricStore = create<FabricState>()(
           ),
         })),
 
-      // NEW: Smart Shuffle Logic
       shufflePattern: () => {
         const { loomWidth } = get();
-        const targetUnits = loomWidth * 2; // 1 inch = 2 units
+        const targetUnits = loomWidth * 2;
         let currentUnits = 0;
         const newItems: Stripe[] = [];
 
-        // Generate stripes until we fill the width
         while (currentUnits < targetUnits) {
-          let width = Math.floor(Math.random() * 3) + 1; // Random width 1-3
-
-          // Clamp the last stripe to fit exactly
+          let width = Math.floor(Math.random() * 3) + 1;
           if (currentUnits + width > targetUnits) {
             width = targetUnits - currentUnits;
           }
@@ -101,7 +160,6 @@ export const useFabricStore = create<FabricState>()(
           }
         }
 
-        // For simplicity in shuffle, we create 1 main block that repeats once
         const newSegment: Segment = {
           id: uuidv4(),
           type: 'group',

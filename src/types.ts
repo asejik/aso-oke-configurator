@@ -19,12 +19,13 @@ export interface Segment {
 export interface FabricState {
   timeline: Segment[];
   textureOpacity: number;
-  loomWidth: number; // New: 6.5, 20, or 25 inches
+  loomWidth: number;
+  activeAlert: string | null; // Add this
 
   // Actions
-  setLoomWidth: (width: number) => void; // New
-  resetPattern: () => void; // New
-
+  clearAlert: () => void; // Add this
+  setLoomWidth: (width: number) => void;
+  resetPattern: () => void;
   addSegment: () => void;
   addStripeToSegment: (segmentId: string, stripe: Omit<Stripe, 'id'>) => void;
   updateSegmentRepeat: (segmentId: string, count: number) => void;

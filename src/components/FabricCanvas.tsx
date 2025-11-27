@@ -9,7 +9,7 @@ const CANVAS_HEIGHT = 1920;
 export const FabricCanvas = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const { timeline, textureOpacity } = useFabricStore();
+  const { timeline, textureOpacity, loomWidth } = useFabricStore();
 
   const noisePattern = useMemo(() => {
     const pCanvas = document.createElement('canvas');
@@ -42,37 +42,40 @@ export const FabricCanvas = () => {
     };
   }, [timeline]);
 
-  // NEW: Watermarked Export
   const handleDownload = () => {
     const sourceCanvas = canvasRef.current;
     if (!sourceCanvas) return;
 
-    // 1. Create a temporary canvas
     const tempCanvas = document.createElement('canvas');
     tempCanvas.width = sourceCanvas.width;
     tempCanvas.height = sourceCanvas.height;
     const tCtx = tempCanvas.getContext('2d');
     if (!tCtx) return;
 
-    // 2. Copy the original design
     tCtx.drawImage(sourceCanvas, 0, 0);
 
-    // 3. Add Watermark
+    // FIXED: Dynamic Watermark Sizing
     tCtx.save();
-    tCtx.translate(tempCanvas.width - 40, tempCanvas.height - 40);
-    tCtx.rotate(-Math.PI / 2); // Rotate text to run up the side, or keep flat?
-    // Let's keep it flat at bottom right for readability
+    tCtx.translate(tempCanvas.width / 2, tempCanvas.height / 2);
+
+    // Calculate font size proportional to width (10% of width)
+    const fontSize = Math.max(20, Math.floor(tempCanvas.width / 10));
+    tCtx.font = `bold ${fontSize}px sans-serif`;
+
+    tCtx.textAlign = 'center';
+    tCtx.textBaseline = 'middle';
+
+    // 10% Opacity
+    tCtx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+    tCtx.fillText('TCG Fashions', 0, 0);
+
+    // Subtle stroke
+    tCtx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+    tCtx.lineWidth = Math.max(1, fontSize / 40); // Scale stroke with font
+    tCtx.strokeText('TCG Fashions', 0, 0);
+
     tCtx.restore();
 
-    tCtx.font = 'bold 48px sans-serif';
-    tCtx.fillStyle = 'rgba(0, 0, 0, 0.5)'; // Semi-transparent black
-    tCtx.textAlign = 'right';
-    tCtx.fillText('TCG Fashions', tempCanvas.width - 50, tempCanvas.height - 50);
-
-    tCtx.fillStyle = 'rgba(255, 255, 255, 0.8)'; // Slight white highlight for contrast
-    tCtx.fillText('TCG Fashions', tempCanvas.width - 52, tempCanvas.height - 52);
-
-    // 4. Download
     const link = document.createElement('a');
     link.download = `TCG-AsoOke-${new Date().toISOString().slice(0,10)}.png`;
     link.href = tempCanvas.toDataURL('image/png');
@@ -120,7 +123,6 @@ export const FabricCanvas = () => {
   return (
     <div
       ref={containerRef}
-      // NEW: added scroll-smooth
       className="w-full h-full overflow-x-auto overflow-y-hidden bg-stone-200 relative shadow-inner flex flex-col scroll-smooth"
     >
       {timeline.length === 0 ? (
@@ -130,8 +132,8 @@ export const FabricCanvas = () => {
       ) : (
         <>
             <div className="sticky left-0 top-0 w-full p-4 z-20 flex justify-between items-start pointer-events-none">
-                <div className="bg-black/75 backdrop-blur text-white text-xs px-3 py-1.5 rounded-full shadow-sm border border-white/10 pointer-events-auto">
-                    Width: {totalInches}"
+                <div className="bg-black/80 backdrop-blur text-white text-xs px-3 py-1.5 rounded-full shadow-lg border border-white/10 pointer-events-auto font-mono">
+                    Width: {totalInches}" / {loomWidth}"
                 </div>
 
                 <button

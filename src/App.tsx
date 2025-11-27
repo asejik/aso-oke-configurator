@@ -1,7 +1,10 @@
+import { useState } from 'react';
 import { useFabricStore } from './store/fabricStore';
 import { FabricCanvas } from './components/FabricCanvas';
 import { SegmentCard } from './components/SegmentCard';
 import { DisclaimerModal } from './components/DisclaimerModal';
+import { ClearModal } from './components/ClearModal';
+import { AlertModal } from './components/AlertModal'; // NEW
 import { Shuffle, Plus, RotateCcw } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -12,8 +15,12 @@ function App() {
     addSegment,
     resetPattern,
     loomWidth,
-    setLoomWidth
+    setLoomWidth,
+    activeAlert, // NEW: Subscribe to alert state
+    clearAlert   // NEW: Action to clear alert
   } = useFabricStore();
+
+  const [isClearModalOpen, setIsClearModalOpen] = useState(false);
 
   const LOOM_OPTIONS = [
     { label: 'Awẹ́ (6.5")', value: 6.5 },
@@ -25,10 +32,24 @@ function App() {
     <div className="h-screen w-full flex flex-col bg-gray-50 overflow-hidden">
       <DisclaimerModal />
 
+      {/* NEW: Limit Alert Modal */}
+      <AlertModal
+        message={activeAlert}
+        onClose={clearAlert}
+      />
+
+      <ClearModal
+        isOpen={isClearModalOpen}
+        onCancel={() => setIsClearModalOpen(false)}
+        onConfirm={() => {
+            resetPattern();
+            setIsClearModalOpen(false);
+        }}
+      />
+
       {/* SECTION 1: The Loom (Canvas) - Top 55% */}
       <div className="h-[55%] w-full relative z-0 shadow-lg flex flex-col">
 
-        {/* NEW: Loom Selector Header */}
         <div className="bg-white/90 backdrop-blur border-b border-gray-200 px-4 py-2 flex items-center justify-between z-30">
            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
               {LOOM_OPTIONS.map((opt) => (
@@ -47,11 +68,8 @@ function App() {
               ))}
            </div>
 
-           {/* NEW: Reset Button */}
            <button
-             onClick={() => {
-               if(confirm('Clear all segments?')) resetPattern();
-             }}
+             onClick={() => setIsClearModalOpen(true)}
              className="text-gray-400 hover:text-red-500 p-1"
              title="Reset Canvas"
            >
