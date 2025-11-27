@@ -54,37 +54,25 @@ export const FabricCanvas = () => {
 
     tCtx.drawImage(sourceCanvas, 0, 0);
 
-    // Watermark Logic
+    // Watermark Logic (Restored to subtle version)
     tCtx.save();
     tCtx.translate(tempCanvas.width / 2, tempCanvas.height / 2);
 
-    // 1. Define the text
-    const text = "TCG Fashions";
+    // Original Sizing Logic
+    const fontSize = Math.max(20, Math.floor(tempCanvas.width / 10));
+    tCtx.font = `bold ${fontSize}px sans-serif`;
 
-    // 2. Measure & Scale Logic (Fit to 80% of Width)
-    // We start with a base font to measure ratio, then scale up/down
-    tCtx.font = "bold 100px sans-serif";
-    const measured = tCtx.measureText(text);
-    const textWidth = measured.width;
-
-    // Calculate exact scale to fill 80% of the canvas width
-    const targetWidth = tempCanvas.width * 0.8;
-    const scaleFactor = targetWidth / textWidth;
-    const finalFontSize = Math.floor(100 * scaleFactor);
-
-    // 3. Apply Styling
-    tCtx.font = `bold ${finalFontSize}px sans-serif`;
     tCtx.textAlign = 'center';
     tCtx.textBaseline = 'middle';
 
-    // Fill: 15% Black (Slightly darker than before)
-    tCtx.fillStyle = 'rgba(0, 0, 0, 0.15)';
-    tCtx.fillText(text, 0, 0);
+    // Original Opacity (10%)
+    tCtx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+    tCtx.fillText('TCG Fashions', 0, 0);
 
-    // Stroke: 50% White (Stronger contrast for visibility)
-    tCtx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-    tCtx.lineWidth = Math.max(2, finalFontSize / 30); // Thicker stroke
-    tCtx.strokeText(text, 0, 0);
+    // Original Subtle Stroke
+    tCtx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+    tCtx.lineWidth = Math.max(1, fontSize / 40);
+    tCtx.strokeText('TCG Fashions', 0, 0);
 
     tCtx.restore();
 
