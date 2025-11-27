@@ -3,7 +3,6 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
 import type { FabricState, Segment, Stripe } from '../types';
 
-// Helper: Random Color Generator
 const getRandomColor = () => {
   const letters = '0123456789ABCDEF';
   let color = '#';
@@ -15,35 +14,31 @@ const getRandomColor = () => {
 
 export const useFabricStore = create<FabricState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       timeline: [],
       textureOpacity: 0.3,
+      loomWidth: 6.5, // Default to Awẹ́
+
+      setLoomWidth: (width) => set({ loomWidth: width }),
+
+      resetPattern: () => set({ timeline: [] }),
 
       addSegment: () =>
-        set((state) => {
-          const newSegment: Segment = {
-            id: uuidv4(),
-            type: 'group',
-            items: [],
-            repeatCount: 1,
-          };
-          return { timeline: [...state.timeline, newSegment] };
-        }),
+        set((state) => ({
+          timeline: [
+            ...state.timeline,
+            { id: uuidv4(), type: 'group', items: [], repeatCount: 1 }
+          ]
+        })),
 
       addStripeToSegment: (segmentId, stripeData) =>
-        set((state) => {
-          const newStripe: Stripe = {
-            ...stripeData,
-            id: uuidv4(),
-          };
-          return {
-            timeline: state.timeline.map((seg) =>
-              seg.id === segmentId
-                ? { ...seg, items: [...seg.items, newStripe] }
-                : seg
-            ),
-          };
-        }),
+        set((state) => ({
+          timeline: state.timeline.map((seg) =>
+            seg.id === segmentId
+              ? { ...seg, items: [...seg.items, { ...stripeData, id: uuidv4() }] }
+              : seg
+          ),
+        })),
 
       updateSegmentRepeat: (segmentId, count) =>
         set((state) => ({
@@ -80,34 +75,45 @@ export const useFabricStore = create<FabricState>()(
           ),
         })),
 
+      // NEW: Smart Shuffle Logic
       shufflePattern: () => {
-        const segmentCount = Math.floor(Math.random() * 2) + 1;
-        const newTimeline: Segment[] = [];
+        const { loomWidth } = get();
+        const targetUnits = loomWidth * 2; // 1 inch = 2 units
+        let currentUnits = 0;
+        const newItems: Stripe[] = [];
 
-        for (let i = 0; i < segmentCount; i++) {
-          const stripeCount = Math.floor(Math.random() * 4) + 2;
-          const items: Stripe[] = [];
+        // Generate stripes until we fill the width
+        while (currentUnits < targetUnits) {
+          let width = Math.floor(Math.random() * 3) + 1; // Random width 1-3
 
-          for (let j = 0; j < stripeCount; j++) {
-            items.push({
-              id: uuidv4(),
-              color: getRandomColor(),
-              widthUnit: Math.floor(Math.random() * 3) + 1,
-            });
+          // Clamp the last stripe to fit exactly
+          if (currentUnits + width > targetUnits) {
+            width = targetUnits - currentUnits;
           }
 
-          newTimeline.push({
-            id: uuidv4(),
-            type: 'group',
-            items,
-            repeatCount: Math.floor(Math.random() * 5) + 1,
-          });
+          if (width > 0) {
+            newItems.push({
+              id: uuidv4(),
+              color: getRandomColor(),
+              widthUnit: width,
+            });
+            currentUnits += width;
+          }
         }
-        set({ timeline: newTimeline });
+
+        // For simplicity in shuffle, we create 1 main block that repeats once
+        const newSegment: Segment = {
+          id: uuidv4(),
+          type: 'group',
+          items: newItems,
+          repeatCount: 1,
+        };
+
+        set({ timeline: [newSegment] });
       },
     }),
     {
-      name: 'aso-oke-storage', // unique name in localStorage
+      name: 'aso-oke-storage',
       storage: createJSONStorage(() => localStorage),
     }
   )

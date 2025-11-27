@@ -1,8 +1,7 @@
 import { useEffect, useRef, useMemo } from 'react';
 import { useFabricStore } from '../store/fabricStore';
-import { Download, Share2 } from 'lucide-react'; // Added icons
+import { Download } from 'lucide-react';
 
-// Constants
 const PIXELS_PER_UNIT = 20;
 const INCHES_PER_UNIT = 0.5;
 const CANVAS_HEIGHT = 1920;
@@ -12,7 +11,6 @@ export const FabricCanvas = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const { timeline, textureOpacity } = useFabricStore();
 
-  // Noise Pattern Generator (Memoized)
   const noisePattern = useMemo(() => {
     const pCanvas = document.createElement('canvas');
     pCanvas.width = 100;
@@ -32,7 +30,6 @@ export const FabricCanvas = () => {
     return pCanvas;
   }, []);
 
-  // Calculate Width
   const { totalPixelWidth, totalInches } = useMemo(() => {
     let units = 0;
     timeline.forEach(seg => {
@@ -45,19 +42,43 @@ export const FabricCanvas = () => {
     };
   }, [timeline]);
 
-  // Export Logic [Cite: PRD FN-13]
+  // NEW: Watermarked Export
   const handleDownload = () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+    const sourceCanvas = canvasRef.current;
+    if (!sourceCanvas) return;
 
-    // Create a temporary link to trigger download
+    // 1. Create a temporary canvas
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = sourceCanvas.width;
+    tempCanvas.height = sourceCanvas.height;
+    const tCtx = tempCanvas.getContext('2d');
+    if (!tCtx) return;
+
+    // 2. Copy the original design
+    tCtx.drawImage(sourceCanvas, 0, 0);
+
+    // 3. Add Watermark
+    tCtx.save();
+    tCtx.translate(tempCanvas.width - 40, tempCanvas.height - 40);
+    tCtx.rotate(-Math.PI / 2); // Rotate text to run up the side, or keep flat?
+    // Let's keep it flat at bottom right for readability
+    tCtx.restore();
+
+    tCtx.font = 'bold 48px sans-serif';
+    tCtx.fillStyle = 'rgba(0, 0, 0, 0.5)'; // Semi-transparent black
+    tCtx.textAlign = 'right';
+    tCtx.fillText('TCG Fashions', tempCanvas.width - 50, tempCanvas.height - 50);
+
+    tCtx.fillStyle = 'rgba(255, 255, 255, 0.8)'; // Slight white highlight for contrast
+    tCtx.fillText('TCG Fashions', tempCanvas.width - 52, tempCanvas.height - 52);
+
+    // 4. Download
     const link = document.createElement('a');
-    link.download = `AsoOke-Design-${new Date().toISOString().slice(0,10)}.png`;
-    link.href = canvas.toDataURL('image/png');
+    link.download = `TCG-AsoOke-${new Date().toISOString().slice(0,10)}.png`;
+    link.href = tempCanvas.toDataURL('image/png');
     link.click();
   };
 
-  // Rendering Loop
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || totalPixelWidth === 0) return;
@@ -70,7 +91,6 @@ export const FabricCanvas = () => {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // 1. Draw Colors
     let currentX = 0;
     timeline.forEach(segment => {
       for (let i = 0; i < segment.repeatCount; i++) {
@@ -83,7 +103,6 @@ export const FabricCanvas = () => {
       }
     });
 
-    // 2. Texture Overlay
     if (textureOpacity > 0) {
         ctx.globalCompositeOperation = 'multiply';
         ctx.globalAlpha = textureOpacity;
@@ -101,7 +120,8 @@ export const FabricCanvas = () => {
   return (
     <div
       ref={containerRef}
-      className="w-full h-full overflow-x-auto overflow-y-hidden bg-stone-200 relative shadow-inner flex flex-col"
+      // NEW: added scroll-smooth
+      className="w-full h-full overflow-x-auto overflow-y-hidden bg-stone-200 relative shadow-inner flex flex-col scroll-smooth"
     >
       {timeline.length === 0 ? (
         <div className="absolute inset-0 flex items-center justify-center text-gray-400">
@@ -109,7 +129,6 @@ export const FabricCanvas = () => {
         </div>
       ) : (
         <>
-            {/* Header Overlay: Width Badge & Actions */}
             <div className="sticky left-0 top-0 w-full p-4 z-20 flex justify-between items-start pointer-events-none">
                 <div className="bg-black/75 backdrop-blur text-white text-xs px-3 py-1.5 rounded-full shadow-sm border border-white/10 pointer-events-auto">
                     Width: {totalInches}"
