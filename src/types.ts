@@ -23,11 +23,12 @@ export interface FabricState {
   activeAlert: string | null;
   isDisclaimerOpen: boolean;
   savedDesigns: SavedDesign[];
-  recentColors: string[]; // NEW: History of colors
+  recentColors: string[];
 
   // Actions
-  addRecentColor: (color: string) => void; // NEW
-  duplicateSegment: (segmentId: string) => void; // NEW
+  addRecentColor: (color: string) => void;
+  duplicateSegment: (segmentId: string) => void;
+  reverseSegment: (segmentId: string) => void; // NEW
 
   saveDesign: (name: string) => void;
   loadDesign: (designId: string) => void;

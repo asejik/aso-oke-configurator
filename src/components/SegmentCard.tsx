@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronRight, Trash2, Plus, Copy } from 'lucide-react';
+import { ChevronDown, ChevronRight, Trash2, Plus, Copy, ArrowLeftRight } from 'lucide-react'; // Added ArrowLeftRight
 import type { Segment, Stripe } from '../types';
 import { useFabricStore } from '../store/fabricStore';
 import { ColorPickerPopover } from './ColorPickerPopover';
@@ -19,7 +19,8 @@ export const SegmentCard = ({ segment, index }: Props) => {
     updateStripe,
     deleteStripeFromSegment,
     duplicateStripe,
-    duplicateSegment // NEW Action
+    duplicateSegment,
+    reverseSegment // NEW
   } = useFabricStore();
 
   const handleAddStripe = () => {
@@ -44,7 +45,16 @@ export const SegmentCard = ({ segment, index }: Props) => {
 
         <div className="flex items-center gap-3">
 
-          {/* NEW: Duplicate Block Button */}
+          {/* NEW: Reverse Button */}
+          <button
+             onClick={() => reverseSegment(segment.id)}
+             className="text-gray-400 hover:text-purple-600 p-1"
+             title="Reverse Order"
+          >
+             <ArrowLeftRight size={16} />
+          </button>
+
+          {/* Duplicate Block Button */}
           <button
              onClick={() => duplicateSegment(segment.id)}
              className="text-gray-400 hover:text-blue-600 p-1"

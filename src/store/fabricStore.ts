@@ -13,60 +13,63 @@ const calculateTotalUnits = (timeline: Segment[]) => {
   }, 0);
 };
 
+// ... imports
+// ... helpers
+
 export const useFabricStore = create<FabricState>()(
   temporal(
     persist(
       (set, get) => ({
-        // ... existing state
+        // ... (existing state)
         timeline: [],
         textureOpacity: 0.3,
         loomWidth: 6.5,
         activeAlert: null,
         isDisclaimerOpen: false,
         savedDesigns: [],
-        recentColors: ['#FF0000', '#00FF00', '#0000FF', '#000000', '#FFFFFF'], // Default starters
+        recentColors: ['#FF0000', '#00FF00', '#0000FF', '#000000', '#FFFFFF'],
 
-        // NEW: Add to history (Max 10)
+        // ... (existing actions)
+
+        // NEW: Reverse Segment
+        reverseSegment: (segmentId) =>
+            set((state) => ({
+              timeline: state.timeline.map((seg) =>
+                seg.id === segmentId
+                  ? { ...seg, items: [...seg.items].reverse() }
+                  : seg
+              ),
+            })),
+
+        // ... (Keep ALL other actions exactly as they were)
         addRecentColor: (color) => set((state) => {
-            // Remove if exists, add to front, keep max 10
             const unique = state.recentColors.filter(c => c !== color);
             return { recentColors: [color, ...unique].slice(0, 10) };
         }),
-
-        // NEW: Duplicate Segment Logic
         duplicateSegment: (segmentId) => {
-            const state = get();
-            const maxUnits = state.loomWidth * 2;
-            const currentUnits = calculateTotalUnits(state.timeline);
-
-            const segment = state.timeline.find(s => s.id === segmentId);
-            if (!segment) return;
-
-            // Calculate width of the segment we want to copy
-            const segmentWidth = segment.items.reduce((acc, item) => acc + item.widthUnit, 0);
-            const addedUnits = segmentWidth * segment.repeatCount;
-
-            if (currentUnits + addedUnits > maxUnits) {
-                set({ activeAlert: `Cannot duplicate Block.\nLoom Limit Reached (${state.loomWidth}")` });
-                return;
-            }
-
-            // Create Deep Copy with new IDs
-            const newSegment: Segment = {
-                ...segment,
-                id: uuidv4(),
-                items: segment.items.map(item => ({ ...item, id: uuidv4() }))
-            };
-
-            // Insert after original
-            const index = state.timeline.findIndex(s => s.id === segmentId);
-            const newTimeline = [...state.timeline];
-            newTimeline.splice(index + 1, 0, newSegment);
-
-            set({ timeline: newTimeline });
+             // ... existing logic
+             const state = get();
+             const maxUnits = state.loomWidth * 2;
+             const currentUnits = calculateTotalUnits(state.timeline);
+             const segment = state.timeline.find(s => s.id === segmentId);
+             if (!segment) return;
+             const segmentWidth = segment.items.reduce((acc, item) => acc + item.widthUnit, 0);
+             const addedUnits = segmentWidth * segment.repeatCount;
+             if (currentUnits + addedUnits > maxUnits) {
+                 set({ activeAlert: `Cannot duplicate Block.\nLoom Limit Reached (${state.loomWidth}")` });
+                 return;
+             }
+             const newSegment: Segment = {
+                 ...segment,
+                 id: uuidv4(),
+                 items: segment.items.map(item => ({ ...item, id: uuidv4() }))
+             };
+             const index = state.timeline.findIndex(s => s.id === segmentId);
+             const newTimeline = [...state.timeline];
+             newTimeline.splice(index + 1, 0, newSegment);
+             set({ timeline: newTimeline });
         },
-
-        // ... (Keep ALL other existing actions exactly as they were: setLoomWidth, resetPattern, etc.)
+        // ... rest of actions (setLoomWidth, resetPattern, etc.)
         setLoomWidth: (width) => set({ loomWidth: width }),
         setLoomAndShuffle: (width) => {
             set({ loomWidth: width });
@@ -218,20 +221,25 @@ export const useFabricStore = create<FabricState>()(
           const targetUnits = loomWidth * 2;
           let currentUnits = 0;
           const newItems: Stripe[] = [];
+          const palette = [
+              '#FF0000', '#00FF00', '#0000FF', '#FFFF00' // Using placeholders, ideally generatePalette()
+          ];
+          // Re-implement generatePalette here locally or assume it's available in scope
           const letters = '0123456789ABCDEF';
           const getHex = () => {
             let color = '#';
             for (let i = 0; i < 6; i++) color += letters[Math.floor(Math.random() * 16)];
             return color;
           };
-          const palette = [getHex(), getHex(), getHex(), getHex()];
+          const dynamicPalette = [getHex(), getHex(), getHex(), getHex()];
+
           while (currentUnits < targetUnits) {
             let width = Math.floor(Math.random() * 3) + 1;
             if (currentUnits + width > targetUnits) width = targetUnits - currentUnits;
             if (width > 0) {
               newItems.push({
                 id: uuidv4(),
-                color: palette[Math.floor(Math.random() * palette.length)],
+                color: dynamicPalette[Math.floor(Math.random() * dynamicPalette.length)],
                 widthUnit: width,
               });
               currentUnits += width;
