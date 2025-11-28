@@ -1,18 +1,20 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
-import type { FabricState, Segment, Stripe } from '../types'; // FIXED: Added 'type'
+import type { FabricState, Segment, Stripe } from '../types';
 
-const getRandomColor = () => {
+// Helper: Get random color from a restricted palette (Max 4 colors)
+const generatePalette = () => {
   const letters = '0123456789ABCDEF';
-  let color = '#';
-  for (let i = 0; i < 6; i++) {
-    color += letters[Math.floor(Math.random() * 16)];
-  }
-  return color;
+  const getHex = () => {
+    let color = '#';
+    for (let i = 0; i < 6; i++) color += letters[Math.floor(Math.random() * 16)];
+    return color;
+  };
+  // Generate 4 distinct colors
+  return [getHex(), getHex(), getHex(), getHex()];
 };
 
-// Helper: Calculate total used width in units
 const calculateTotalUnits = (timeline: Segment[]) => {
   return timeline.reduce((acc, seg) => {
     const segWidth = seg.items.reduce((sAcc, item) => sAcc + item.widthUnit, 0);
@@ -26,13 +28,15 @@ export const useFabricStore = create<FabricState>()(
       timeline: [],
       textureOpacity: 0.3,
       loomWidth: 6.5,
-      activeAlert: null, // NEW: Store alert message here
+      activeAlert: null,
+      isDisclaimerOpen: false, // NEW
 
       setLoomWidth: (width) => set({ loomWidth: width }),
-
       resetPattern: () => set({ timeline: [] }),
+      clearAlert: () => set({ activeAlert: null }),
 
-      clearAlert: () => set({ activeAlert: null }), // NEW: Action to dismiss alert
+      // NEW: Toggle Disclaimer
+      setDisclaimerOpen: (isOpen) => set({ isDisclaimerOpen: isOpen }),
 
       addSegment: () =>
         set((state) => ({
@@ -53,7 +57,6 @@ export const useFabricStore = create<FabricState>()(
         const addedUnits = stripeData.widthUnit * segment.repeatCount;
 
         if (currentUnits + addedUnits > maxUnits) {
-          // FIXED: Use state instead of browser alert
           set({ activeAlert: `Loom Full! Max Width: ${state.loomWidth}"` });
           return;
         }
@@ -67,19 +70,53 @@ export const useFabricStore = create<FabricState>()(
         }));
       },
 
+      // NEW: Duplicate Action
+      duplicateStripe: (segmentId, stripeId) => {
+        const state = get();
+        const maxUnits = state.loomWidth * 2;
+        const currentUnits = calculateTotalUnits(state.timeline);
+
+        const segment = state.timeline.find(s => s.id === segmentId);
+        if (!segment) return;
+
+        const stripeToCopy = segment.items.find(s => s.id === stripeId);
+        if (!stripeToCopy) return;
+
+        // Check limits
+        const addedUnits = stripeToCopy.widthUnit * segment.repeatCount;
+        if (currentUnits + addedUnits > maxUnits) {
+           set({ activeAlert: `Cannot duplicate.\nLoom Limit Reached (${state.loomWidth}")` });
+           return;
+        }
+
+        set((state) => ({
+          timeline: state.timeline.map((seg) =>
+            seg.id === segmentId
+            ? {
+                ...seg,
+                // Insert duplicate right after original
+                items: seg.items.reduce((acc, item) => {
+                    if (item.id === stripeId) {
+                        return [...acc, item, { ...item, id: uuidv4() }];
+                    }
+                    return [...acc, item];
+                }, [] as Stripe[])
+              }
+            : seg
+          )
+        }));
+      },
+
       updateSegmentRepeat: (segmentId, count) => {
         const state = get();
         const maxUnits = state.loomWidth * 2;
-
         const segment = state.timeline.find(s => s.id === segmentId);
         if (!segment) return;
 
         const otherSegmentsWidth = calculateTotalUnits(state.timeline.filter(s => s.id !== segmentId));
         const segmentBaseWidth = segment.items.reduce((acc, item) => acc + item.widthUnit, 0);
 
-        const newTotal = otherSegmentsWidth + (segmentBaseWidth * count);
-
-        if (newTotal > maxUnits) {
+        if (otherSegmentsWidth + (segmentBaseWidth * count) > maxUnits) {
            set({ activeAlert: `Cannot repeat ${count} times.\nLimit is ${state.loomWidth}"` });
            return;
         }
@@ -98,7 +135,6 @@ export const useFabricStore = create<FabricState>()(
 
       updateStripe: (segmentId, stripeId, updates) => {
          const state = get();
-
          if (updates.widthUnit) {
             const maxUnits = state.loomWidth * 2;
             const hypotheticalTimeline = state.timeline.map(seg => {
@@ -108,22 +144,15 @@ export const useFabricStore = create<FabricState>()(
                     items: seg.items.map(item => item.id === stripeId ? { ...item, ...updates } : item)
                 };
             });
-
             if (calculateTotalUnits(hypotheticalTimeline) > maxUnits) {
                 set({ activeAlert: `Too wide! Limit is ${state.loomWidth}"` });
                 return;
             }
          }
-
         set((state) => ({
           timeline: state.timeline.map((seg) =>
             seg.id === segmentId
-              ? {
-                  ...seg,
-                  items: seg.items.map((item) =>
-                    item.id === stripeId ? { ...item, ...updates } : item
-                  ),
-                }
+              ? { ...seg, items: seg.items.map((item) => item.id === stripeId ? { ...item, ...updates } : item) }
               : seg
           ),
         }));
@@ -138,22 +167,23 @@ export const useFabricStore = create<FabricState>()(
           ),
         })),
 
+      // UPDATED: Shuffle with Max 4 Colors
       shufflePattern: () => {
         const { loomWidth } = get();
         const targetUnits = loomWidth * 2;
         let currentUnits = 0;
         const newItems: Stripe[] = [];
+        const palette = generatePalette(); // Only 4 colors
 
         while (currentUnits < targetUnits) {
           let width = Math.floor(Math.random() * 3) + 1;
-          if (currentUnits + width > targetUnits) {
-            width = targetUnits - currentUnits;
-          }
+          if (currentUnits + width > targetUnits) width = targetUnits - currentUnits;
 
           if (width > 0) {
             newItems.push({
               id: uuidv4(),
-              color: getRandomColor(),
+              // Pick random color from the fixed 4-color palette
+              color: palette[Math.floor(Math.random() * palette.length)],
               widthUnit: width,
             });
             currentUnits += width;
@@ -166,7 +196,6 @@ export const useFabricStore = create<FabricState>()(
           items: newItems,
           repeatCount: 1,
         };
-
         set({ timeline: [newSegment] });
       },
     }),

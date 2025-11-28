@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronRight, Trash2, Plus } from 'lucide-react';
-import type { Segment, Stripe } from '../types'; // Ensure 'type' is here too for best practice
+import { ChevronDown, ChevronRight, Trash2, Plus, Copy } from 'lucide-react'; // Added Copy
+import type { Segment, Stripe } from '../types';
 import { useFabricStore } from '../store/fabricStore';
+import { ColorPickerPopover } from './ColorPickerPopover'; // Use custom picker
 
 interface Props {
   segment: Segment;
@@ -16,7 +17,8 @@ export const SegmentCard = ({ segment, index }: Props) => {
     deleteSegment,
     addStripeToSegment,
     updateStripe,
-    deleteStripeFromSegment
+    deleteStripeFromSegment,
+    duplicateStripe // NEW
   } = useFabricStore();
 
   const handleAddStripe = () => {
@@ -25,7 +27,6 @@ export const SegmentCard = ({ segment, index }: Props) => {
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg mb-3 shadow-sm overflow-hidden">
-      {/* HEADER: Summary & Repeat Controls */}
       <div className="flex items-center justify-between p-3 bg-gray-50">
         <div
           className="flex items-center gap-2 cursor-pointer flex-1"
@@ -33,8 +34,6 @@ export const SegmentCard = ({ segment, index }: Props) => {
         >
           {isExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
           <span className="font-semibold text-gray-700">Block {index + 1}</span>
-
-          {/* Mini Color Preview */}
           <div className="flex h-4 gap-[1px] ml-2">
             {segment.items.slice(0, 5).map((s) => (
               <div key={s.id} className="w-2 h-full rounded-full" style={{ background: s.color }} />
@@ -43,7 +42,6 @@ export const SegmentCard = ({ segment, index }: Props) => {
         </div>
 
         <div className="flex items-center gap-3">
-            {/* Repeat Logic */}
           <div className="flex items-center bg-white border rounded px-2 py-1">
             <span className="text-xs text-gray-500 mr-2">x</span>
             <input
@@ -64,7 +62,6 @@ export const SegmentCard = ({ segment, index }: Props) => {
         </div>
       </div>
 
-      {/* BODY: Stripe Editor (Accordion) */}
       {isExpanded && (
         <div className="p-3 border-t bg-white">
             <div className="space-y-2">
@@ -78,6 +75,7 @@ export const SegmentCard = ({ segment, index }: Props) => {
                         stripe={stripe}
                         onChange={(updates) => updateStripe(segment.id, stripe.id, updates)}
                         onDelete={() => deleteStripeFromSegment(segment.id, stripe.id)}
+                        onDuplicate={() => duplicateStripe(segment.id, stripe.id)} // NEW
                     />
                 ))}
             </div>
@@ -94,38 +92,51 @@ export const SegmentCard = ({ segment, index }: Props) => {
   );
 };
 
-// Sub-component for individual stripe row
-const StripeRow = ({ stripe, onChange, onDelete }: {
+const StripeRow = ({ stripe, onChange, onDelete, onDuplicate }: {
     stripe: Stripe,
     onChange: (u: Partial<Stripe>) => void,
-    onDelete: () => void
+    onDelete: () => void,
+    onDuplicate: () => void
 }) => {
     return (
         <div className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded group">
-            {/* Color Picker */}
-            <div className="relative overflow-hidden w-8 h-8 rounded-full shadow-sm border border-gray-200">
-                <input
-                    type="color"
-                    value={stripe.color}
-                    onChange={(e) => onChange({ color: e.target.value })}
-                    className="absolute -top-2 -left-2 w-12 h-12 cursor-pointer p-0 border-0"
-                />
-            </div>
+            {/* Custom Popover Picker */}
+            <ColorPickerPopover
+                color={stripe.color}
+                onChange={(c) => onChange({ color: c })}
+            />
 
-            {/* Width Selector */}
+            {/* Sizes Update: 0.25, 0.5, 1, 1.5, 2, 2.5, 3 */}
             <select
                 value={stripe.widthUnit}
-                onChange={(e) => onChange({ widthUnit: parseInt(e.target.value) })}
+                onChange={(e) => onChange({ widthUnit: parseFloat(e.target.value) })}
                 className="flex-1 text-sm border-gray-200 rounded-md py-1.5 focus:ring-blue-500 focus:border-blue-500"
             >
+                <option value={0.5}>Ex. Fine (0.25")</option>
                 <option value={1}>Fine (0.5")</option>
                 <option value={2}>Medium (1.0")</option>
                 <option value={3}>Thick (1.5")</option>
+                <option value={4}>X-Thick (2.0")</option>
+                <option value={5}>XX-Thick (2.5")</option>
                 <option value={6}>Wide (3.0")</option>
             </select>
 
-            <button onClick={onDelete} className="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
-                <Trash2 size={14} />
+            {/* Duplicate Button */}
+            <button
+                onClick={onDuplicate}
+                className="text-gray-400 hover:text-blue-600 transition-colors p-1"
+                title="Duplicate Line"
+            >
+                <Copy size={16} />
+            </button>
+
+            {/* Delete Button (FIXED: Removed opacity-0) */}
+            <button
+                onClick={onDelete}
+                className="text-red-300 hover:text-red-600 transition-colors p-1"
+                title="Delete Line"
+            >
+                <Trash2 size={16} />
             </button>
         </div>
     )

@@ -20,10 +20,14 @@ export interface FabricState {
   timeline: Segment[];
   textureOpacity: number;
   loomWidth: number;
-  activeAlert: string | null; // Add this
+  activeAlert: string | null;
+  isDisclaimerOpen: boolean; // NEW
 
   // Actions
-  clearAlert: () => void; // Add this
+  setDisclaimerOpen: (isOpen: boolean) => void; // NEW
+  duplicateStripe: (segmentId: string, stripeId: string) => void; // NEW
+
+  clearAlert: () => void;
   setLoomWidth: (width: number) => void;
   resetPattern: () => void;
   addSegment: () => void;

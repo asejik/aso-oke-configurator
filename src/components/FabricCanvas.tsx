@@ -1,6 +1,6 @@
 import { useEffect, useRef, useMemo } from 'react';
 import { useFabricStore } from '../store/fabricStore';
-import { Download } from 'lucide-react';
+import { Download, Share2 } from 'lucide-react'; // Added Share2
 
 const PIXELS_PER_UNIT = 20;
 const INCHES_PER_UNIT = 0.5;
@@ -42,7 +42,8 @@ export const FabricCanvas = () => {
     };
   }, [timeline]);
 
-  const handleDownload = () => {
+  // Shared Logic for generating the final blob
+  const generateBlob = async (callback: (blob: Blob | null) => void) => {
     const sourceCanvas = canvasRef.current;
     if (!sourceCanvas) return;
 
@@ -54,49 +55,65 @@ export const FabricCanvas = () => {
 
     tCtx.drawImage(sourceCanvas, 0, 0);
 
-    // Watermark Logic (Restored to subtle version)
     tCtx.save();
     tCtx.translate(tempCanvas.width / 2, tempCanvas.height / 2);
 
-    // Original Sizing Logic
     const fontSize = Math.max(20, Math.floor(tempCanvas.width / 10));
     tCtx.font = `bold ${fontSize}px sans-serif`;
-
     tCtx.textAlign = 'center';
     tCtx.textBaseline = 'middle';
-
-    // Original Opacity (10%)
     tCtx.fillStyle = 'rgba(0, 0, 0, 0.1)';
     tCtx.fillText('TCG Fashions', 0, 0);
-
-    // Original Subtle Stroke
     tCtx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
     tCtx.lineWidth = Math.max(1, fontSize / 40);
     tCtx.strokeText('TCG Fashions', 0, 0);
-
     tCtx.restore();
 
-    // Timestamp Filename
-    const now = new Date();
-    const dateStr = now.toISOString().slice(0,10);
-    const timeStr = now.toTimeString().slice(0,8).replace(/:/g, '');
+    tempCanvas.toBlob(callback, 'image/png');
+  };
 
-    const link = document.createElement('a');
-    link.download = `TCG-AsoOke-${dateStr}-${timeStr}.png`;
-    link.href = tempCanvas.toDataURL('image/png');
-    link.click();
+  const handleDownload = () => {
+    generateBlob((blob) => {
+        if (!blob) return;
+        const now = new Date();
+        const dateStr = now.toISOString().slice(0,10);
+        const timeStr = now.toTimeString().slice(0,8).replace(/:/g, '');
+        const link = document.createElement('a');
+        link.download = `TCG-AsoOke-${dateStr}-${timeStr}.png`;
+        link.href = URL.createObjectURL(blob);
+        link.click();
+    });
+  };
+
+  const handleShare = () => {
+    generateBlob(async (blob) => {
+        if (!blob) return;
+        const file = new File([blob], 'aso-oke-design.png', { type: 'image/png' });
+
+        if (navigator.share && navigator.canShare({ files: [file] })) {
+            try {
+                await navigator.share({
+                    files: [file],
+                    title: 'My Aso Oke Design',
+                    text: 'Check out this fabric design I created with TCG Fashions!',
+                });
+            } catch (err) {
+                console.log('Share canceled');
+            }
+        } else {
+            alert('Sharing not supported on this device. Please download instead.');
+        }
+    });
   };
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || totalPixelWidth === 0) return;
-
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
     canvas.width = totalPixelWidth;
     canvas.height = CANVAS_HEIGHT;
-
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     let currentX = 0;
@@ -122,13 +139,13 @@ export const FabricCanvas = () => {
         ctx.globalAlpha = 1.0;
         ctx.globalCompositeOperation = 'source-over';
     }
-
   }, [timeline, totalPixelWidth, textureOpacity, noisePattern]);
 
   return (
+    // FIT WIDTH UPDATE: Removed overflow-x-auto, added w-full, flex justify-center
     <div
       ref={containerRef}
-      className="w-full h-full overflow-x-auto overflow-y-hidden bg-stone-200 relative shadow-inner flex flex-col scroll-smooth"
+      className="w-full h-full bg-stone-200 relative shadow-inner flex flex-col items-center overflow-y-hidden"
     >
       {timeline.length === 0 ? (
         <div className="absolute inset-0 flex items-center justify-center text-gray-400">
@@ -141,19 +158,34 @@ export const FabricCanvas = () => {
                     Width: {totalInches}" / {loomWidth}"
                 </div>
 
-                <button
-                    onClick={handleDownload}
-                    className="bg-white text-gray-900 p-2.5 rounded-full shadow-lg border border-gray-100 hover:bg-gray-50 pointer-events-auto transition-transform active:scale-95"
-                    title="Download Design"
-                >
-                    <Download size={20} />
-                </button>
+                <div className="flex gap-2 pointer-events-auto">
+                    {/* Share Button */}
+                    <button
+                        onClick={handleShare}
+                        className="bg-white text-gray-900 p-2.5 rounded-full shadow-lg border border-gray-100 hover:bg-gray-50 transition-transform active:scale-95"
+                        title="Share Design"
+                    >
+                        <Share2 size={20} />
+                    </button>
+                    <button
+                        onClick={handleDownload}
+                        className="bg-white text-gray-900 p-2.5 rounded-full shadow-lg border border-gray-100 hover:bg-gray-50 transition-transform active:scale-95"
+                        title="Download Design"
+                    >
+                        <Download size={20} />
+                    </button>
+                </div>
             </div>
 
+            {/* Canvas fits width (100%) and height auto */}
             <canvas
                 ref={canvasRef}
-                className="h-full block shadow-2xl"
-                style={{ width: `${totalPixelWidth}px` }}
+                className="block shadow-2xl origin-top"
+                style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'fill' // Ensures it stretches to fill height if needed, or 'contain'
+                }}
             />
         </>
       )}

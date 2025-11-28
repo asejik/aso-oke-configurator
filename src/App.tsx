@@ -4,8 +4,8 @@ import { FabricCanvas } from './components/FabricCanvas';
 import { SegmentCard } from './components/SegmentCard';
 import { DisclaimerModal } from './components/DisclaimerModal';
 import { ClearModal } from './components/ClearModal';
-import { AlertModal } from './components/AlertModal'; // NEW
-import { Shuffle, Plus, RotateCcw } from 'lucide-react';
+import { AlertModal } from './components/AlertModal';
+import { Shuffle, Plus, RotateCcw, Info } from 'lucide-react'; // Added Info
 import clsx from 'clsx';
 
 function App() {
@@ -16,8 +16,9 @@ function App() {
     resetPattern,
     loomWidth,
     setLoomWidth,
-    activeAlert, // NEW: Subscribe to alert state
-    clearAlert   // NEW: Action to clear alert
+    activeAlert,
+    clearAlert,
+    setDisclaimerOpen // NEW
   } = useFabricStore();
 
   const [isClearModalOpen, setIsClearModalOpen] = useState(false);
@@ -31,13 +32,7 @@ function App() {
   return (
     <div className="h-screen w-full flex flex-col bg-gray-50 overflow-hidden">
       <DisclaimerModal />
-
-      {/* NEW: Limit Alert Modal */}
-      <AlertModal
-        message={activeAlert}
-        onClose={clearAlert}
-      />
-
+      <AlertModal message={activeAlert} onClose={clearAlert} />
       <ClearModal
         isOpen={isClearModalOpen}
         onCancel={() => setIsClearModalOpen(false)}
@@ -68,22 +63,34 @@ function App() {
               ))}
            </div>
 
-           <button
-             onClick={() => setIsClearModalOpen(true)}
-             className="text-gray-400 hover:text-red-500 p-1"
-             title="Reset Canvas"
-           >
-             <RotateCcw size={18} />
-           </button>
+           <div className="flex items-center gap-1">
+             {/* NEW: Info Icon */}
+             <button
+               onClick={() => setDisclaimerOpen(true)}
+               className="text-gray-400 hover:text-blue-500 p-2"
+               title="Color Accuracy Info"
+             >
+               <Info size={18} />
+             </button>
+
+             <button
+               onClick={() => setIsClearModalOpen(true)}
+               className="text-gray-400 hover:text-red-500 p-2"
+               title="Reset Canvas"
+             >
+               <RotateCcw size={18} />
+             </button>
+           </div>
         </div>
 
-        <div className="flex-1 relative overflow-hidden">
+        <div className="flex-1 relative overflow-hidden flex justify-center bg-stone-200">
+             {/* Added bg-stone-200 here to match canvas bg in case of empty space */}
             <FabricCanvas />
 
             <button
-            onClick={shufflePattern}
-            className="absolute bottom-4 right-4 bg-gray-900 text-white p-3 rounded-full shadow-xl active:scale-95 transition-transform z-10"
-            title="Shuffle within Preset Size"
+                onClick={shufflePattern}
+                className="absolute bottom-4 right-4 bg-gray-900 text-white p-3 rounded-full shadow-xl active:scale-95 transition-transform z-10"
+                title="Shuffle (Max 4 Colors)"
             >
             <Shuffle size={20} />
             </button>
