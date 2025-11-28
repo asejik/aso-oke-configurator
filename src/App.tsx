@@ -5,7 +5,8 @@ import { SegmentCard } from './components/SegmentCard';
 import { DisclaimerModal } from './components/DisclaimerModal';
 import { ClearModal } from './components/ClearModal';
 import { AlertModal } from './components/AlertModal';
-import { Shuffle, Plus, RotateCcw, Info } from 'lucide-react'; // Added Info
+import { SavedDesignsModal } from './components/SavedDesignsModal'; // NEW
+import { Shuffle, Plus, RotateCcw, Info, Save, Folder } from 'lucide-react'; // Added Save, Folder
 import clsx from 'clsx';
 
 function App() {
@@ -18,10 +19,12 @@ function App() {
     setLoomWidth,
     activeAlert,
     clearAlert,
-    setDisclaimerOpen // NEW
+    setDisclaimerOpen,
+    saveDesign // NEW action
   } = useFabricStore();
 
   const [isClearModalOpen, setIsClearModalOpen] = useState(false);
+  const [isLibraryOpen, setIsLibraryOpen] = useState(false); // NEW state for modal
 
   const LOOM_OPTIONS = [
     { label: 'Awẹ́ (6.5")', value: 6.5 },
@@ -29,10 +32,25 @@ function App() {
     { label: 'Loom 25', value: 25 },
   ];
 
+  const handleSave = () => {
+    const name = prompt("Name your design:");
+    if (name) {
+        saveDesign(name);
+        alert("Design Saved!");
+    }
+  };
+
   return (
     <div className="h-screen w-full flex flex-col bg-gray-50 overflow-hidden">
       <DisclaimerModal />
       <AlertModal message={activeAlert} onClose={clearAlert} />
+
+      {/* NEW: Saved Designs Modal */}
+      <SavedDesignsModal
+        isOpen={isLibraryOpen}
+        onClose={() => setIsLibraryOpen(false)}
+      />
+
       <ClearModal
         isOpen={isClearModalOpen}
         onCancel={() => setIsClearModalOpen(false)}
@@ -46,6 +64,8 @@ function App() {
       <div className="h-[55%] w-full relative z-0 shadow-lg flex flex-col">
 
         <div className="bg-white/90 backdrop-blur border-b border-gray-200 px-4 py-2 flex items-center justify-between z-30">
+
+           {/* Loom Selectors */}
            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
               {LOOM_OPTIONS.map((opt) => (
                 <button
@@ -63,8 +83,26 @@ function App() {
               ))}
            </div>
 
-           <div className="flex items-center gap-1">
-             {/* NEW: Info Icon */}
+           {/* Header Actions */}
+           <div className="flex items-center gap-0">
+             <button
+                onClick={() => setIsLibraryOpen(true)}
+                className="text-gray-500 hover:text-blue-600 p-2"
+                title="My Designs"
+             >
+                <Folder size={20} />
+             </button>
+
+             <button
+                onClick={handleSave}
+                className="text-gray-500 hover:text-blue-600 p-2"
+                title="Save Design"
+             >
+                <Save size={20} />
+             </button>
+
+             <div className="w-px h-4 bg-gray-300 mx-1"></div>
+
              <button
                onClick={() => setDisclaimerOpen(true)}
                className="text-gray-400 hover:text-blue-500 p-2"
@@ -84,7 +122,6 @@ function App() {
         </div>
 
         <div className="flex-1 relative overflow-hidden flex justify-center bg-stone-200">
-             {/* Added bg-stone-200 here to match canvas bg in case of empty space */}
             <FabricCanvas />
 
             <button

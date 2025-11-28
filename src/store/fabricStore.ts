@@ -1,9 +1,12 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
-import type { FabricState, Segment, Stripe } from '../types';
+import type { FabricState, Segment, Stripe, SavedDesign } from '../types';
 
-// Helper: Get random color from a restricted palette (Max 4 colors)
+// ... (Keep existing helpers generatePalette and calculateTotalUnits here) ...
+// (For brevity, I'm assuming you keep the helper functions at the top of the file)
+
+// Helper: Get random color (Keep this)
 const generatePalette = () => {
   const letters = '0123456789ABCDEF';
   const getHex = () => {
@@ -11,10 +14,10 @@ const generatePalette = () => {
     for (let i = 0; i < 6; i++) color += letters[Math.floor(Math.random() * 16)];
     return color;
   };
-  // Generate 4 distinct colors
   return [getHex(), getHex(), getHex(), getHex()];
 };
 
+// Helper: Calc Units (Keep this)
 const calculateTotalUnits = (timeline: Segment[]) => {
   return timeline.reduce((acc, seg) => {
     const segWidth = seg.items.reduce((sAcc, item) => sAcc + item.widthUnit, 0);
@@ -29,14 +32,49 @@ export const useFabricStore = create<FabricState>()(
       textureOpacity: 0.3,
       loomWidth: 6.5,
       activeAlert: null,
-      isDisclaimerOpen: false, // NEW
+      isDisclaimerOpen: false,
+      savedDesigns: [], // NEW: Initialize empty library
 
       setLoomWidth: (width) => set({ loomWidth: width }),
       resetPattern: () => set({ timeline: [] }),
       clearAlert: () => set({ activeAlert: null }),
-
-      // NEW: Toggle Disclaimer
       setDisclaimerOpen: (isOpen) => set({ isDisclaimerOpen: isOpen }),
+
+      // NEW: Save Current State
+      saveDesign: (name) => {
+        const state = get();
+        if (state.timeline.length === 0) {
+            set({ activeAlert: "Cannot save an empty pattern." });
+            return;
+        }
+        const newDesign: SavedDesign = {
+            id: uuidv4(),
+            name,
+            createdAt: Date.now(),
+            timeline: state.timeline,
+            loomWidth: state.loomWidth
+        };
+        set({ savedDesigns: [newDesign, ...state.savedDesigns] });
+      },
+
+      // NEW: Load State
+      loadDesign: (designId) => {
+        const state = get();
+        const design = state.savedDesigns.find(d => d.id === designId);
+        if (design) {
+            set({
+                timeline: design.timeline,
+                loomWidth: design.loomWidth
+            });
+        }
+      },
+
+      // NEW: Delete
+      deleteDesign: (designId) => {
+        set(state => ({
+            savedDesigns: state.savedDesigns.filter(d => d.id !== designId)
+        }));
+      },
 
       addSegment: () =>
         set((state) => ({
@@ -70,7 +108,6 @@ export const useFabricStore = create<FabricState>()(
         }));
       },
 
-      // NEW: Duplicate Action
       duplicateStripe: (segmentId, stripeId) => {
         const state = get();
         const maxUnits = state.loomWidth * 2;
@@ -82,7 +119,6 @@ export const useFabricStore = create<FabricState>()(
         const stripeToCopy = segment.items.find(s => s.id === stripeId);
         if (!stripeToCopy) return;
 
-        // Check limits
         const addedUnits = stripeToCopy.widthUnit * segment.repeatCount;
         if (currentUnits + addedUnits > maxUnits) {
            set({ activeAlert: `Cannot duplicate.\nLoom Limit Reached (${state.loomWidth}")` });
@@ -94,7 +130,6 @@ export const useFabricStore = create<FabricState>()(
             seg.id === segmentId
             ? {
                 ...seg,
-                // Insert duplicate right after original
                 items: seg.items.reduce((acc, item) => {
                     if (item.id === stripeId) {
                         return [...acc, item, { ...item, id: uuidv4() }];
@@ -167,13 +202,12 @@ export const useFabricStore = create<FabricState>()(
           ),
         })),
 
-      // UPDATED: Shuffle with Max 4 Colors
       shufflePattern: () => {
         const { loomWidth } = get();
         const targetUnits = loomWidth * 2;
         let currentUnits = 0;
         const newItems: Stripe[] = [];
-        const palette = generatePalette(); // Only 4 colors
+        const palette = generatePalette();
 
         while (currentUnits < targetUnits) {
           let width = Math.floor(Math.random() * 3) + 1;
@@ -182,7 +216,6 @@ export const useFabricStore = create<FabricState>()(
           if (width > 0) {
             newItems.push({
               id: uuidv4(),
-              // Pick random color from the fixed 4-color palette
               color: palette[Math.floor(Math.random() * palette.length)],
               widthUnit: width,
             });

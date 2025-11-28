@@ -21,12 +21,16 @@ export interface FabricState {
   textureOpacity: number;
   loomWidth: number;
   activeAlert: string | null;
-  isDisclaimerOpen: boolean; // NEW
+  isDisclaimerOpen: boolean;
+  savedDesigns: SavedDesign[]; // NEW: The Library
 
   // Actions
-  setDisclaimerOpen: (isOpen: boolean) => void; // NEW
-  duplicateStripe: (segmentId: string, stripeId: string) => void; // NEW
+  saveDesign: (name: string) => void; // NEW
+  loadDesign: (designId: string) => void; // NEW
+  deleteDesign: (designId: string) => void; // NEW
 
+  setDisclaimerOpen: (isOpen: boolean) => void;
+  duplicateStripe: (segmentId: string, stripeId: string) => void;
   clearAlert: () => void;
   setLoomWidth: (width: number) => void;
   resetPattern: () => void;
@@ -37,4 +41,12 @@ export interface FabricState {
   updateStripe: (segmentId: string, stripeId: string, updates: Partial<Stripe>) => void;
   deleteStripeFromSegment: (segmentId: string, stripeId: string) => void;
   shufflePattern: () => void;
+}
+
+export interface SavedDesign {
+  id: string;
+  name: string;
+  createdAt: number; // Timestamp
+  timeline: Segment[];
+  loomWidth: number;
 }
