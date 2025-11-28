@@ -34,6 +34,11 @@ export const useFabricStore = create<FabricState>()(
         savedDesigns: [],
 
         setLoomWidth: (width) => set({ loomWidth: width }),
+        setLoomAndShuffle: (width) => {
+            set({ loomWidth: width });
+            // Immediately trigger shuffle using the NEW width
+            get().shufflePattern();
+        },
         resetPattern: () => set({ timeline: [] }),
         clearAlert: () => set({ activeAlert: null }),
         setDisclaimerOpen: (isOpen) => set({ isDisclaimerOpen: isOpen }),

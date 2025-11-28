@@ -17,7 +17,8 @@ function App() {
     addSegment,
     resetPattern,
     loomWidth,
-    setLoomWidth,
+    // setLoomWidth, <-- We replace this
+    setLoomAndShuffle, // <-- With this
     activeAlert,
     clearAlert,
     setDisclaimerOpen,
@@ -64,16 +65,15 @@ function App() {
 
       <div className="h-[55%] w-full relative z-0 shadow-lg flex flex-col">
 
-        {/* Header Container */}
         <div className="bg-white/90 backdrop-blur border-b border-gray-200 z-30 flex flex-col md:flex-row md:items-center justify-between md:px-6">
 
            <div className="grid grid-cols-3 gap-1 p-2 w-full md:w-auto md:flex md:gap-2">
               {LOOM_OPTIONS.map((opt) => (
                 <button
                   key={opt.value}
-                  onClick={() => setLoomWidth(opt.value)}
+                  // UPDATE: Click now sets width AND shuffles
+                  onClick={() => setLoomAndShuffle(opt.value)}
                   className={clsx(
-                    // FIX 1: Added 'px-4' for internal padding inside the pill
                     "text-[11px] md:text-xs font-medium py-1.5 px-4 rounded-full transition-colors text-center border",
                     loomWidth === opt.value
                       ? "bg-gray-900 text-white border-gray-900"
