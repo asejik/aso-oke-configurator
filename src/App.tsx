@@ -7,7 +7,7 @@ import { DisclaimerModal } from './components/DisclaimerModal';
 import { ClearModal } from './components/ClearModal';
 import { AlertModal } from './components/AlertModal';
 import { SavedDesignsModal } from './components/SavedDesignsModal';
-import { Shuffle, Plus, RotateCcw, Info, Folder, Undo2, Redo2 } from 'lucide-react'; // Removed Save
+import { Shuffle, Plus, RotateCcw, Info, Folder, Undo2, Redo2 } from 'lucide-react';
 import clsx from 'clsx';
 
 function App() {
@@ -62,13 +62,11 @@ function App() {
         }}
       />
 
-      {/* SECTION 1: The Loom (Canvas) - Top 55% */}
       <div className="h-[55%] w-full relative z-0 shadow-lg flex flex-col">
 
-        {/* UPDATED HEADER: Responsive Layout */}
-        <div className="bg-white/90 backdrop-blur border-b border-gray-200 z-30 flex flex-col md:flex-row md:items-center justify-between">
+        {/* FIX 1: Added md:px-6 for better desktop padding */}
+        <div className="bg-white/90 backdrop-blur border-b border-gray-200 z-30 flex flex-col md:flex-row md:items-center justify-between md:px-6">
 
-           {/* Row 1 (Mobile): Loom Selectors - Full Width Grid */}
            <div className="grid grid-cols-3 gap-1 p-2 w-full md:w-auto md:flex md:gap-2">
               {LOOM_OPTIONS.map((opt) => (
                 <button
@@ -86,10 +84,8 @@ function App() {
               ))}
            </div>
 
-           {/* Row 2 (Mobile): Actions - Right Aligned */}
            <div className="flex items-center justify-between md:justify-end px-2 pb-2 md:pb-0 md:p-2 gap-0 border-t border-gray-100 md:border-0">
 
-             {/* Undo/Redo Group */}
              <div className="flex items-center mr-2 border-r border-gray-200 pr-2">
                  <button
                     onClick={() => undo()}
@@ -109,7 +105,6 @@ function App() {
                  </button>
              </div>
 
-             {/* Right Side Tools */}
              <div className="flex items-center">
                 <button
                     onClick={() => setIsLibraryOpen(true)}
@@ -118,8 +113,6 @@ function App() {
                 >
                     <Folder size={18} />
                 </button>
-
-                {/* Removed Save Icon from here */}
 
                 <div className="w-px h-4 bg-gray-300 mx-1"></div>
 
@@ -143,7 +136,6 @@ function App() {
         </div>
 
         <div className="flex-1 relative overflow-hidden flex justify-center bg-stone-200">
-            {/* Pass handleSave to FabricCanvas */}
             <FabricCanvas onSave={handleSave} />
 
             <button
@@ -156,7 +148,6 @@ function App() {
         </div>
       </div>
 
-      {/* SECTION 2: Control Panel - Bottom 45% */}
       <div className="h-[45%] flex flex-col w-full bg-white z-10 relative">
         <div className="px-6 pt-4 pb-2 border-b flex justify-between items-center bg-white">
             <h2 className="font-bold text-gray-800">Weaving Blocks</h2>

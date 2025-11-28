@@ -1,8 +1,9 @@
+// ... imports remain the same
 import { useState } from 'react';
-import { ChevronDown, ChevronRight, Trash2, Plus, Copy } from 'lucide-react'; // Added Copy
+import { ChevronDown, ChevronRight, Trash2, Plus, Copy } from 'lucide-react';
 import type { Segment, Stripe } from '../types';
 import { useFabricStore } from '../store/fabricStore';
-import { ColorPickerPopover } from './ColorPickerPopover'; // Use custom picker
+import { ColorPickerPopover } from './ColorPickerPopover';
 
 interface Props {
   segment: Segment;
@@ -18,7 +19,7 @@ export const SegmentCard = ({ segment, index }: Props) => {
     addStripeToSegment,
     updateStripe,
     deleteStripeFromSegment,
-    duplicateStripe // NEW
+    duplicateStripe
   } = useFabricStore();
 
   const handleAddStripe = () => {
@@ -26,8 +27,9 @@ export const SegmentCard = ({ segment, index }: Props) => {
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg mb-3 shadow-sm overflow-hidden">
-      <div className="flex items-center justify-between p-3 bg-gray-50">
+    // FIX 3: Removed 'overflow-hidden' so the popover can float outside the card
+    <div className="bg-white border border-gray-200 rounded-lg mb-3 shadow-sm">
+      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-t-lg">
         <div
           className="flex items-center gap-2 cursor-pointer flex-1"
           onClick={() => setIsExpanded(!isExpanded)}
@@ -63,7 +65,7 @@ export const SegmentCard = ({ segment, index }: Props) => {
       </div>
 
       {isExpanded && (
-        <div className="p-3 border-t bg-white">
+        <div className="p-3 border-t bg-white rounded-b-lg">
             <div className="space-y-2">
                 {segment.items.length === 0 && (
                     <p className="text-sm text-gray-400 italic text-center py-2">No threads yet.</p>
@@ -75,7 +77,7 @@ export const SegmentCard = ({ segment, index }: Props) => {
                         stripe={stripe}
                         onChange={(updates) => updateStripe(segment.id, stripe.id, updates)}
                         onDelete={() => deleteStripeFromSegment(segment.id, stripe.id)}
-                        onDuplicate={() => duplicateStripe(segment.id, stripe.id)} // NEW
+                        onDuplicate={() => duplicateStripe(segment.id, stripe.id)}
                     />
                 ))}
             </div>
@@ -100,13 +102,12 @@ const StripeRow = ({ stripe, onChange, onDelete, onDuplicate }: {
 }) => {
     return (
         <div className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded group">
-            {/* Custom Popover Picker */}
+            {/* Popover Logic is handled inside ColorPickerPopover */}
             <ColorPickerPopover
                 color={stripe.color}
                 onChange={(c) => onChange({ color: c })}
             />
 
-            {/* Sizes Update: 0.25, 0.5, 1, 1.5, 2, 2.5, 3 */}
             <select
                 value={stripe.widthUnit}
                 onChange={(e) => onChange({ widthUnit: parseFloat(e.target.value) })}
@@ -121,7 +122,6 @@ const StripeRow = ({ stripe, onChange, onDelete, onDuplicate }: {
                 <option value={6}>Wide (3.0")</option>
             </select>
 
-            {/* Duplicate Button */}
             <button
                 onClick={onDuplicate}
                 className="text-gray-400 hover:text-blue-600 transition-colors p-1"
@@ -130,7 +130,6 @@ const StripeRow = ({ stripe, onChange, onDelete, onDuplicate }: {
                 <Copy size={16} />
             </button>
 
-            {/* Delete Button (FIXED: Removed opacity-0) */}
             <button
                 onClick={onDelete}
                 className="text-red-300 hover:text-red-600 transition-colors p-1"

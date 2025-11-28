@@ -10,7 +10,6 @@ export const ColorPickerPopover = ({ color, onChange }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
   const popover = useRef<HTMLDivElement>(null);
 
-  // Close on click outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (popover.current && !popover.current.contains(event.target as Node)) {
@@ -30,8 +29,9 @@ export const ColorPickerPopover = ({ color, onChange }: Props) => {
       />
 
       {isOpen && (
-        <div className="absolute top-10 left-0 z-50 animate-in fade-in zoom-in duration-200" ref={popover}>
-          <div className="bg-white p-3 rounded-xl shadow-2xl border border-gray-200">
+        // FIX 2: Changed positioning to Right (left-10) and Bottom Aligned (bottom-0)
+        <div className="absolute left-10 bottom-0 z-50 animate-in fade-in zoom-in duration-200" ref={popover}>
+          <div className="bg-white p-3 rounded-xl shadow-2xl border border-gray-200 w-[200px]">
              <HexColorPicker color={color} onChange={onChange} />
              <div className="mt-2 flex gap-2">
                 <div className="flex-1 bg-gray-100 rounded px-2 py-1 text-xs text-gray-600 font-mono text-center">
