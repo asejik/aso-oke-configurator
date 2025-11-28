@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { HexColorPicker } from 'react-colorful';
-import { useFabricStore } from '../store/fabricStore'; // Import store
+import { useFabricStore } from '../store/fabricStore';
 
 interface Props {
   color: string;
@@ -13,40 +13,50 @@ export const ColorPickerPopover = ({ color, onChange }: Props) => {
   const popoverRef = useRef<HTMLDivElement>(null);
   const [coords, setCoords] = useState({ top: 0, left: 0 });
 
-  // Connect to store for Recent Colors
   const { recentColors, addRecentColor } = useFabricStore();
 
   const handleToggle = () => {
-    if (!isOpen && triggerRef.current) {
-        const rect = triggerRef.current.getBoundingClientRect();
-        setCoords({
-            top: rect.top - 120, // Adjusted slightly to account for extra height of recent colors
-            left: rect.right + 15
-        });
+    if (isOpen) {
+        // Closing: Save color
+        addRecentColor(color);
+        setIsOpen(false);
+    } else {
+        // Opening: Calculate position
+        if (triggerRef.current) {
+            const rect = triggerRef.current.getBoundingClientRect();
+            setCoords({
+                top: rect.top - 120,
+                left: rect.right + 15
+            });
+        }
+        setIsOpen(true);
     }
-    setIsOpen(!isOpen);
   };
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    // Handle both Mouse and Touch events
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
       if (
         triggerRef.current &&
         !triggerRef.current.contains(event.target as Node) &&
         popoverRef.current &&
         !popoverRef.current.contains(event.target as Node)
       ) {
-        // When closing, save the current color to history
         if (isOpen) {
-            addRecentColor(color);
+            addRecentColor(color); // Save to recent on outside click
+            setIsOpen(false);
         }
-        setIsOpen(false);
       }
     };
 
     if (isOpen) {
         document.addEventListener("mousedown", handleClickOutside);
+        document.addEventListener("touchstart", handleClickOutside); // FIX: Mobile support
     }
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+        document.removeEventListener("touchstart", handleClickOutside);
+    };
   }, [isOpen, color, addRecentColor]);
 
   return (
@@ -66,7 +76,7 @@ export const ColorPickerPopover = ({ color, onChange }: Props) => {
         >
           <div className="bg-white p-3 rounded-xl shadow-2xl border border-gray-200 w-[200px]">
 
-             {/* NEW: Recent Colors Row */}
+             {/* Recent Colors Row */}
              <div className="mb-2">
                 <p className="text-[10px] text-gray-400 font-bold mb-1 uppercase tracking-wider">Recent</p>
                 <div className="flex flex-wrap gap-1.5">

@@ -24,7 +24,7 @@ export const SegmentCard = ({ segment, index }: Props) => {
   } = useFabricStore();
 
   const handleAddStripe = () => {
-    addStripeToSegment(segment.id, { color: '#000000', widthUnit: 2 });
+    addStripeToSegment(segment.id, { color: '#000000', widthUnit: 0.5 });
   };
 
   return (
