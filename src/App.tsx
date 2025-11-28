@@ -1,12 +1,13 @@
 import { useState } from 'react';
+import { useStore } from 'zustand'; // NEW
 import { useFabricStore } from './store/fabricStore';
 import { FabricCanvas } from './components/FabricCanvas';
 import { SegmentCard } from './components/SegmentCard';
 import { DisclaimerModal } from './components/DisclaimerModal';
 import { ClearModal } from './components/ClearModal';
 import { AlertModal } from './components/AlertModal';
-import { SavedDesignsModal } from './components/SavedDesignsModal'; // NEW
-import { Shuffle, Plus, RotateCcw, Info, Save, Folder } from 'lucide-react'; // Added Save, Folder
+import { SavedDesignsModal } from './components/SavedDesignsModal';
+import { Shuffle, Plus, RotateCcw, Info, Save, Folder, Undo2, Redo2 } from 'lucide-react'; // Added Undo2, Redo2
 import clsx from 'clsx';
 
 function App() {
@@ -20,11 +21,14 @@ function App() {
     activeAlert,
     clearAlert,
     setDisclaimerOpen,
-    saveDesign // NEW action
+    saveDesign
   } = useFabricStore();
 
+  // NEW: Access Temporal (History) Store
+  const { undo, redo, pastStates, futureStates } = useStore(useFabricStore.temporal, (state) => state);
+
   const [isClearModalOpen, setIsClearModalOpen] = useState(false);
-  const [isLibraryOpen, setIsLibraryOpen] = useState(false); // NEW state for modal
+  const [isLibraryOpen, setIsLibraryOpen] = useState(false);
 
   const LOOM_OPTIONS = [
     { label: 'Awẹ́ (6.5")', value: 6.5 },
@@ -45,7 +49,6 @@ function App() {
       <DisclaimerModal />
       <AlertModal message={activeAlert} onClose={clearAlert} />
 
-      {/* NEW: Saved Designs Modal */}
       <SavedDesignsModal
         isOpen={isLibraryOpen}
         onClose={() => setIsLibraryOpen(false)}
@@ -85,6 +88,27 @@ function App() {
 
            {/* Header Actions */}
            <div className="flex items-center gap-0">
+
+             {/* NEW: Undo/Redo Group */}
+             <div className="flex items-center mr-2 border-r border-gray-200 pr-2">
+                 <button
+                    onClick={() => undo()}
+                    disabled={pastStates.length === 0}
+                    className="text-gray-500 hover:text-gray-900 p-2 disabled:opacity-30"
+                    title="Undo"
+                 >
+                    <Undo2 size={20} />
+                 </button>
+                 <button
+                    onClick={() => redo()}
+                    disabled={futureStates.length === 0}
+                    className="text-gray-500 hover:text-gray-900 p-2 disabled:opacity-30"
+                    title="Redo"
+                 >
+                    <Redo2 size={20} />
+                 </button>
+             </div>
+
              <button
                 onClick={() => setIsLibraryOpen(true)}
                 className="text-gray-500 hover:text-blue-600 p-2"
