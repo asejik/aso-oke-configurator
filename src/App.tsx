@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useStore } from 'zustand'; // NEW
+import { useStore } from 'zustand';
 import { useFabricStore } from './store/fabricStore';
 import { FabricCanvas } from './components/FabricCanvas';
 import { SegmentCard } from './components/SegmentCard';
@@ -7,7 +7,7 @@ import { DisclaimerModal } from './components/DisclaimerModal';
 import { ClearModal } from './components/ClearModal';
 import { AlertModal } from './components/AlertModal';
 import { SavedDesignsModal } from './components/SavedDesignsModal';
-import { Shuffle, Plus, RotateCcw, Info, Save, Folder, Undo2, Redo2 } from 'lucide-react'; // Added Undo2, Redo2
+import { Shuffle, Plus, RotateCcw, Info, Folder, Undo2, Redo2 } from 'lucide-react'; // Removed Save
 import clsx from 'clsx';
 
 function App() {
@@ -24,7 +24,6 @@ function App() {
     saveDesign
   } = useFabricStore();
 
-  // NEW: Access Temporal (History) Store
   const { undo, redo, pastStates, futureStates } = useStore(useFabricStore.temporal, (state) => state);
 
   const [isClearModalOpen, setIsClearModalOpen] = useState(false);
@@ -66,19 +65,20 @@ function App() {
       {/* SECTION 1: The Loom (Canvas) - Top 55% */}
       <div className="h-[55%] w-full relative z-0 shadow-lg flex flex-col">
 
-        <div className="bg-white/90 backdrop-blur border-b border-gray-200 px-4 py-2 flex items-center justify-between z-30">
+        {/* UPDATED HEADER: Responsive Layout */}
+        <div className="bg-white/90 backdrop-blur border-b border-gray-200 z-30 flex flex-col md:flex-row md:items-center justify-between">
 
-           {/* Loom Selectors */}
-           <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
+           {/* Row 1 (Mobile): Loom Selectors - Full Width Grid */}
+           <div className="grid grid-cols-3 gap-1 p-2 w-full md:w-auto md:flex md:gap-2">
               {LOOM_OPTIONS.map((opt) => (
                 <button
                   key={opt.value}
                   onClick={() => setLoomWidth(opt.value)}
                   className={clsx(
-                    "text-xs font-medium px-3 py-1.5 rounded-full whitespace-nowrap transition-colors",
+                    "text-[11px] md:text-xs font-medium py-1.5 rounded-full transition-colors text-center border",
                     loomWidth === opt.value
-                      ? "bg-gray-900 text-white"
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                      ? "bg-gray-900 text-white border-gray-900"
+                      : "bg-white text-gray-600 border-gray-200 hover:bg-gray-100"
                   )}
                 >
                   {opt.label}
@@ -86,10 +86,10 @@ function App() {
               ))}
            </div>
 
-           {/* Header Actions */}
-           <div className="flex items-center gap-0">
+           {/* Row 2 (Mobile): Actions - Right Aligned */}
+           <div className="flex items-center justify-between md:justify-end px-2 pb-2 md:pb-0 md:p-2 gap-0 border-t border-gray-100 md:border-0">
 
-             {/* NEW: Undo/Redo Group */}
+             {/* Undo/Redo Group */}
              <div className="flex items-center mr-2 border-r border-gray-200 pr-2">
                  <button
                     onClick={() => undo()}
@@ -97,7 +97,7 @@ function App() {
                     className="text-gray-500 hover:text-gray-900 p-2 disabled:opacity-30"
                     title="Undo"
                  >
-                    <Undo2 size={20} />
+                    <Undo2 size={18} />
                  </button>
                  <button
                     onClick={() => redo()}
@@ -105,48 +105,46 @@ function App() {
                     className="text-gray-500 hover:text-gray-900 p-2 disabled:opacity-30"
                     title="Redo"
                  >
-                    <Redo2 size={20} />
+                    <Redo2 size={18} />
                  </button>
              </div>
 
-             <button
-                onClick={() => setIsLibraryOpen(true)}
-                className="text-gray-500 hover:text-blue-600 p-2"
-                title="My Designs"
-             >
-                <Folder size={20} />
-             </button>
+             {/* Right Side Tools */}
+             <div className="flex items-center">
+                <button
+                    onClick={() => setIsLibraryOpen(true)}
+                    className="text-gray-500 hover:text-blue-600 p-2"
+                    title="My Designs"
+                >
+                    <Folder size={18} />
+                </button>
 
-             <button
-                onClick={handleSave}
-                className="text-gray-500 hover:text-blue-600 p-2"
-                title="Save Design"
-             >
-                <Save size={20} />
-             </button>
+                {/* Removed Save Icon from here */}
 
-             <div className="w-px h-4 bg-gray-300 mx-1"></div>
+                <div className="w-px h-4 bg-gray-300 mx-1"></div>
 
-             <button
-               onClick={() => setDisclaimerOpen(true)}
-               className="text-gray-400 hover:text-blue-500 p-2"
-               title="Color Accuracy Info"
-             >
-               <Info size={18} />
-             </button>
+                <button
+                onClick={() => setDisclaimerOpen(true)}
+                className="text-gray-400 hover:text-blue-500 p-2"
+                title="Color Accuracy Info"
+                >
+                <Info size={18} />
+                </button>
 
-             <button
-               onClick={() => setIsClearModalOpen(true)}
-               className="text-gray-400 hover:text-red-500 p-2"
-               title="Reset Canvas"
-             >
-               <RotateCcw size={18} />
-             </button>
+                <button
+                onClick={() => setIsClearModalOpen(true)}
+                className="text-gray-400 hover:text-red-500 p-2"
+                title="Reset Canvas"
+                >
+                <RotateCcw size={18} />
+                </button>
+             </div>
            </div>
         </div>
 
         <div className="flex-1 relative overflow-hidden flex justify-center bg-stone-200">
-            <FabricCanvas />
+            {/* Pass handleSave to FabricCanvas */}
+            <FabricCanvas onSave={handleSave} />
 
             <button
                 onClick={shufflePattern}

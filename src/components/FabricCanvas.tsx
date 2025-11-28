@@ -1,16 +1,22 @@
 import { useEffect, useRef, useMemo } from 'react';
 import { useFabricStore } from '../store/fabricStore';
-import { Download, Share2 } from 'lucide-react'; // Added Share2
+import { Download, Share2, Heart } from 'lucide-react'; // Added Heart
+
+// NEW: Interface for props
+interface FabricCanvasProps {
+  onSave: () => void;
+}
 
 const PIXELS_PER_UNIT = 20;
 const INCHES_PER_UNIT = 0.5;
 const CANVAS_HEIGHT = 1920;
 
-export const FabricCanvas = () => {
+export const FabricCanvas = ({ onSave }: FabricCanvasProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const { timeline, textureOpacity, loomWidth } = useFabricStore();
 
+  // ... (Keep existing noisePattern and useMemo logic exactly as is) ...
   const noisePattern = useMemo(() => {
     const pCanvas = document.createElement('canvas');
     pCanvas.width = 100;
@@ -42,7 +48,7 @@ export const FabricCanvas = () => {
     };
   }, [timeline]);
 
-  // Shared Logic for generating the final blob
+  // ... (Keep existing generateBlob, handleDownload, handleShare functions exactly as is) ...
   const generateBlob = async (callback: (blob: Blob | null) => void) => {
     const sourceCanvas = canvasRef.current;
     if (!sourceCanvas) return;
@@ -106,6 +112,7 @@ export const FabricCanvas = () => {
     });
   };
 
+  // ... (Keep useEffect rendering loop exactly as is) ...
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || totalPixelWidth === 0) return;
@@ -142,7 +149,6 @@ export const FabricCanvas = () => {
   }, [timeline, totalPixelWidth, textureOpacity, noisePattern]);
 
   return (
-    // FIT WIDTH UPDATE: Removed overflow-x-auto, added w-full, flex justify-center
     <div
       ref={containerRef}
       className="w-full h-full bg-stone-200 relative shadow-inner flex flex-col items-center overflow-y-hidden"
@@ -159,6 +165,15 @@ export const FabricCanvas = () => {
                 </div>
 
                 <div className="flex gap-2 pointer-events-auto">
+                    {/* NEW: Heart Save Button */}
+                    <button
+                        onClick={onSave}
+                        className="bg-white text-red-500 p-2.5 rounded-full shadow-lg border border-gray-100 hover:bg-red-50 transition-transform active:scale-95"
+                        title="Save to My Designs"
+                    >
+                        <Heart size={20} />
+                    </button>
+
                     {/* Share Button */}
                     <button
                         onClick={handleShare}
@@ -167,6 +182,7 @@ export const FabricCanvas = () => {
                     >
                         <Share2 size={20} />
                     </button>
+                    {/* Download Button */}
                     <button
                         onClick={handleDownload}
                         className="bg-white text-gray-900 p-2.5 rounded-full shadow-lg border border-gray-100 hover:bg-gray-50 transition-transform active:scale-95"
@@ -177,14 +193,13 @@ export const FabricCanvas = () => {
                 </div>
             </div>
 
-            {/* Canvas fits width (100%) and height auto */}
             <canvas
                 ref={canvasRef}
                 className="block shadow-2xl origin-top"
                 style={{
                     width: '100%',
                     height: '100%',
-                    objectFit: 'fill' // Ensures it stretches to fill height if needed, or 'contain'
+                    objectFit: 'fill'
                 }}
             />
         </>
