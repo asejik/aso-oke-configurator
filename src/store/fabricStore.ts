@@ -221,10 +221,8 @@ export const useFabricStore = create<FabricState>()(
           const targetUnits = loomWidth * 2;
           let currentUnits = 0;
           const newItems: Stripe[] = [];
-          const palette = [
-              '#FF0000', '#00FF00', '#0000FF', '#FFFF00' // Using placeholders, ideally generatePalette()
-          ];
-          // Re-implement generatePalette here locally or assume it's available in scope
+
+          // Generate 4 random colors dynamically
           const letters = '0123456789ABCDEF';
           const getHex = () => {
             let color = '#';
