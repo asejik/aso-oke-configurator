@@ -64,7 +64,7 @@ function App() {
 
       <div className="h-[55%] w-full relative z-0 shadow-lg flex flex-col">
 
-        {/* FIX 1: Added md:px-6 for better desktop padding */}
+        {/* Header Container */}
         <div className="bg-white/90 backdrop-blur border-b border-gray-200 z-30 flex flex-col md:flex-row md:items-center justify-between md:px-6">
 
            <div className="grid grid-cols-3 gap-1 p-2 w-full md:w-auto md:flex md:gap-2">
@@ -73,7 +73,8 @@ function App() {
                   key={opt.value}
                   onClick={() => setLoomWidth(opt.value)}
                   className={clsx(
-                    "text-[11px] md:text-xs font-medium py-1.5 rounded-full transition-colors text-center border",
+                    // FIX 1: Added 'px-4' for internal padding inside the pill
+                    "text-[11px] md:text-xs font-medium py-1.5 px-4 rounded-full transition-colors text-center border",
                     loomWidth === opt.value
                       ? "bg-gray-900 text-white border-gray-900"
                       : "bg-white text-gray-600 border-gray-200 hover:bg-gray-100"
