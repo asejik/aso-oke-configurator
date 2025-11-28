@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronRight, Trash2, Plus, Copy, ArrowLeftRight } from 'lucide-react'; // Added ArrowLeftRight
+import { ChevronDown, ChevronRight, Trash2, Plus, Copy, ArrowLeftRight } from 'lucide-react';
 import type { Segment, Stripe } from '../types';
 import { useFabricStore } from '../store/fabricStore';
 import { ColorPickerPopover } from './ColorPickerPopover';
@@ -20,7 +20,7 @@ export const SegmentCard = ({ segment, index }: Props) => {
     deleteStripeFromSegment,
     duplicateStripe,
     duplicateSegment,
-    reverseSegment // NEW
+    reverseSegment
   } = useFabricStore();
 
   const handleAddStripe = () => {
@@ -29,23 +29,30 @@ export const SegmentCard = ({ segment, index }: Props) => {
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg mb-3 shadow-sm">
-      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-t-lg">
+      <div className="flex items-center justify-between p-2.5 bg-gray-50 rounded-t-lg"> {/* Reduced padding p-3 -> p-2.5 */}
+
         <div
-          className="flex items-center gap-2 cursor-pointer flex-1"
+          className="flex items-center gap-1.5 cursor-pointer flex-1 min-w-0" // Added min-w-0 for flex shrinking
           onClick={() => setIsExpanded(!isExpanded)}
         >
-          {isExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
-          <span className="font-semibold text-gray-700">Block {index + 1}</span>
-          <div className="flex h-4 gap-[1px] ml-2">
+          {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+
+          {/* Label: Added text-sm and whitespace-nowrap to prevent drop */}
+          <span className="font-semibold text-gray-700 text-sm whitespace-nowrap">
+            Block {index + 1}
+          </span>
+
+          {/* Color Preview: Hidden on very small screens if needed, or just tight */}
+          <div className="flex h-3 gap-[1px] ml-1.5">
             {segment.items.slice(0, 5).map((s) => (
-              <div key={s.id} className="w-2 h-full rounded-full" style={{ background: s.color }} />
+              <div key={s.id} className="w-1.5 h-full rounded-full" style={{ background: s.color }} />
             ))}
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        {/* Right Controls: Tighter Gap (gap-3 -> gap-1) */}
+        <div className="flex items-center gap-1">
 
-          {/* NEW: Reverse Button */}
           <button
              onClick={() => reverseSegment(segment.id)}
              className="text-gray-400 hover:text-purple-600 p-1"
@@ -54,7 +61,6 @@ export const SegmentCard = ({ segment, index }: Props) => {
              <ArrowLeftRight size={16} />
           </button>
 
-          {/* Duplicate Block Button */}
           <button
              onClick={() => duplicateSegment(segment.id)}
              className="text-gray-400 hover:text-blue-600 p-1"
@@ -63,20 +69,23 @@ export const SegmentCard = ({ segment, index }: Props) => {
              <Copy size={16} />
           </button>
 
-          <div className="flex items-center bg-white border rounded px-2 py-1">
-            <span className="text-xs text-gray-500 mr-2">x</span>
+          {/* Repeat Box: Reduced Padding and Size */}
+          <div className="flex items-center bg-white border rounded px-1.5 py-0.5">
+            <span className="text-[10px] text-gray-500 mr-1">x</span>
             <input
               type="number"
               min="1"
               max="99"
               value={segment.repeatCount}
               onChange={(e) => updateSegmentRepeat(segment.id, parseInt(e.target.value) || 1)}
-              className="w-8 text-center text-sm font-medium outline-none"
+              // Width reduced w-8 -> w-5, Text reduced text-sm -> text-xs
+              className="w-5 text-center text-xs font-medium outline-none"
             />
           </div>
+
           <button
             onClick={() => deleteSegment(segment.id)}
-            className="text-gray-400 hover:text-red-500"
+            className="text-gray-400 hover:text-red-500 p-1"
           >
             <Trash2 size={16} />
           </button>
