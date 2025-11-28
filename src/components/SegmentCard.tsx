@@ -1,4 +1,3 @@
-// ... imports remain the same
 import { useState } from 'react';
 import { ChevronDown, ChevronRight, Trash2, Plus, Copy } from 'lucide-react';
 import type { Segment, Stripe } from '../types';
@@ -19,7 +18,8 @@ export const SegmentCard = ({ segment, index }: Props) => {
     addStripeToSegment,
     updateStripe,
     deleteStripeFromSegment,
-    duplicateStripe
+    duplicateStripe,
+    duplicateSegment // NEW Action
   } = useFabricStore();
 
   const handleAddStripe = () => {
@@ -27,7 +27,6 @@ export const SegmentCard = ({ segment, index }: Props) => {
   };
 
   return (
-    // FIX 3: Removed 'overflow-hidden' so the popover can float outside the card
     <div className="bg-white border border-gray-200 rounded-lg mb-3 shadow-sm">
       <div className="flex items-center justify-between p-3 bg-gray-50 rounded-t-lg">
         <div
@@ -44,6 +43,16 @@ export const SegmentCard = ({ segment, index }: Props) => {
         </div>
 
         <div className="flex items-center gap-3">
+
+          {/* NEW: Duplicate Block Button */}
+          <button
+             onClick={() => duplicateSegment(segment.id)}
+             className="text-gray-400 hover:text-blue-600 p-1"
+             title="Duplicate Block"
+          >
+             <Copy size={16} />
+          </button>
+
           <div className="flex items-center bg-white border rounded px-2 py-1">
             <span className="text-xs text-gray-500 mr-2">x</span>
             <input
@@ -102,7 +111,6 @@ const StripeRow = ({ stripe, onChange, onDelete, onDuplicate }: {
 }) => {
     return (
         <div className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded group">
-            {/* Popover Logic is handled inside ColorPickerPopover */}
             <ColorPickerPopover
                 color={stripe.color}
                 onChange={(c) => onChange({ color: c })}

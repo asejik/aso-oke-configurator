@@ -23,19 +23,20 @@ export interface FabricState {
   activeAlert: string | null;
   isDisclaimerOpen: boolean;
   savedDesigns: SavedDesign[];
+  recentColors: string[]; // NEW: History of colors
 
   // Actions
+  addRecentColor: (color: string) => void; // NEW
+  duplicateSegment: (segmentId: string) => void; // NEW
+
   saveDesign: (name: string) => void;
   loadDesign: (designId: string) => void;
   deleteDesign: (designId: string) => void;
-
   setDisclaimerOpen: (isOpen: boolean) => void;
   duplicateStripe: (segmentId: string, stripeId: string) => void;
   clearAlert: () => void;
-
   setLoomWidth: (width: number) => void;
-  setLoomAndShuffle: (width: number) => void; // NEW
-
+  setLoomAndShuffle: (width: number) => void;
   resetPattern: () => void;
   addSegment: () => void;
   addStripeToSegment: (segmentId: string, stripe: Omit<Stripe, 'id'>) => void;
