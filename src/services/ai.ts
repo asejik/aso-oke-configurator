@@ -9,7 +9,7 @@ const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY || '');
 export const generatePattern = async (prompt: string): Promise<{ timeline: Segment[], loomWidth: number }> => {
   try {
     // We use the flash model for speed and structured JSON capabilities
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }); // Using 1.5 Flash as the current viable endpoint for this behavior
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" }); // Using 1.5 Flash as the current viable endpoint for this behavior
 
     const systemPrompt = `
       You are an expert Aso Oke weaver and textile engineer.
