@@ -60,7 +60,7 @@ export const MagicModal = ({ isOpen, onClose }: Props) => {
 
           <textarea
             className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none min-h-[120px] resize-none"
-            placeholder="E.g., I need a pattern with deep royal blue and gold. The blue lines should be thick (1.5 inches) and the gold lines thin. Repeat the block 5 times."
+            placeholder="Describe your pattern and specify the size (6.5, 20, or 25 inches).&#10;&#10;Example: 'I need a 20-inch design with deep royal blue and gold stripes. The blue lines should be thick and the gold lines thin.'"
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
           />

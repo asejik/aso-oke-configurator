@@ -155,26 +155,24 @@ function App() {
 
       <div className="h-[45%] flex flex-col w-full bg-white z-10 relative">
         {/* --- REPLACEMENT BLOCK START --- */}
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-gray-800">Weaving Blocks</h2>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+            <h2 className="text-xl font-bold text-gray-800">Weaving Blocks</h2>
 
-            <div className="flex gap-2">
-              {/* The New Magic Button */}
+            <div className="flex items-center gap-2 self-start sm:self-auto">
               <button
                 onClick={() => setIsMagicOpen(true)}
-                className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-purple-600 to-blue-600 text-white text-sm font-semibold rounded-md shadow-sm hover:opacity-90 transition-opacity"
+                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white text-sm font-semibold rounded-lg shadow-sm hover:shadow-md hover:opacity-90 transition-all active:scale-95"
               >
                 <Sparkles size={16} />
-                <span className="hidden sm:inline">Magic</span>
+                <span>Magic</span>
               </button>
 
-              {/* The Existing Add Block Button */}
               <button
                 onClick={addSegment}
-                className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-600 text-sm font-semibold rounded-md hover:bg-blue-100 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-white border border-blue-100 text-blue-600 text-sm font-semibold rounded-lg shadow-sm hover:bg-blue-50 transition-all active:scale-95"
               >
                 <Plus size={16} />
-                ADD BLOCK
+                <span>Add Block</span>
               </button>
             </div>
           </div>
