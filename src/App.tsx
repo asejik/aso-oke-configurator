@@ -9,6 +9,8 @@ import { AlertModal } from './components/AlertModal';
 import { SavedDesignsModal } from './components/SavedDesignsModal';
 import { Shuffle, Plus, RotateCcw, Info, Folder, Undo2, Redo2 } from 'lucide-react';
 import clsx from 'clsx';
+import { MagicModal } from './components/MagicModal';
+import { Sparkles } from 'lucide-react';
 
 function App() {
   const {
@@ -24,6 +26,8 @@ function App() {
     setDisclaimerOpen,
     saveDesign
   } = useFabricStore();
+
+  const [isMagicOpen, setIsMagicOpen] = useState(false);
 
   const { undo, redo, pastStates, futureStates } = useStore(useFabricStore.temporal, (state) => state);
 
@@ -150,15 +154,31 @@ function App() {
       </div>
 
       <div className="h-[45%] flex flex-col w-full bg-white z-10 relative">
-        <div className="px-6 pt-4 pb-2 border-b flex justify-between items-center bg-white">
-            <h2 className="font-bold text-gray-800">Weaving Blocks</h2>
-            <button
+        {/* --- REPLACEMENT BLOCK START --- */}
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-bold text-gray-800">Weaving Blocks</h2>
+
+            <div className="flex gap-2">
+              {/* The New Magic Button */}
+              <button
+                onClick={() => setIsMagicOpen(true)}
+                className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-purple-600 to-blue-600 text-white text-sm font-semibold rounded-md shadow-sm hover:opacity-90 transition-opacity"
+              >
+                <Sparkles size={16} />
+                <span className="hidden sm:inline">Magic</span>
+              </button>
+
+              {/* The Existing Add Block Button */}
+              <button
                 onClick={addSegment}
-                className="flex items-center gap-1 text-xs font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-3 py-1.5 rounded-full hover:bg-blue-100"
-            >
-                <Plus size={14} /> Add Block
-            </button>
-        </div>
+                className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-600 text-sm font-semibold rounded-md hover:bg-blue-100 transition-colors"
+              >
+                <Plus size={16} />
+                ADD BLOCK
+              </button>
+            </div>
+          </div>
+          {/* --- REPLACEMENT BLOCK END --- */}
 
         <div className="flex-1 overflow-y-auto p-4 space-y-2 pb-20">
           {timeline.length === 0 ? (
@@ -173,6 +193,7 @@ function App() {
           )}
         </div>
       </div>
+      <MagicModal isOpen={isMagicOpen} onClose={() => setIsMagicOpen(false)} />
     </div>
   );
 }

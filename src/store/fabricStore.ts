@@ -46,6 +46,9 @@ export const useFabricStore = create<FabricState>()(
             const unique = state.recentColors.filter(c => c !== color);
             return { recentColors: [color, ...unique].slice(0, 10) };
         }),
+
+        setTimeline: (timeline) => set({ timeline }),
+
         duplicateSegment: (segmentId) => {
              // ... existing logic
              const state = get();

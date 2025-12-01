@@ -28,7 +28,8 @@ export interface FabricState {
   // Actions
   addRecentColor: (color: string) => void;
   duplicateSegment: (segmentId: string) => void;
-  reverseSegment: (segmentId: string) => void; // NEW
+  reverseSegment: (segmentId: string) => void;
+  setTimeline: (timeline: Segment[]) => void;
 
   saveDesign: (name: string) => void;
   loadDesign: (designId: string) => void;
